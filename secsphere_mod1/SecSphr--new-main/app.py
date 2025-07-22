@@ -523,7 +523,11 @@ def dashboard():
                 'total_responses': len(responses)
             })
         
-        return render_template('dashboard_superuser.html', products_data=products_data)
+        # Get all responses and comments for admin view
+        all_responses = QuestionnaireResponse.query.order_by(QuestionnaireResponse.created_at.desc()).limit(100).all()
+        all_comments = LeadComment.query.order_by(LeadComment.created_at.desc()).limit(50).all()
+        
+        return render_template('dashboard_superuser.html', products_data=products_data, all_responses=all_responses, all_comments=all_comments)
     return redirect(url_for('index'))
 
 def is_assessment_complete(product_id, user_id):
@@ -1059,4 +1063,4 @@ def api_all_scores():
 if __name__ == '__main__':
     os.makedirs('static/uploads', exist_ok=True)
     init_database()
-    app.run(debug=True)
+    app.run(debug=True, port=5001)

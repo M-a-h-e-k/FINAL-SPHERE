@@ -94,9 +94,9 @@
                                     <div class="col-md-8">
                                         <div class="mb-3">
                                             <h6 class="question-text">
-                                                <span class="question-number {% if existing_answers and outer_loop_index in existing_answers %}completed{% endif %}">
-                                                    <span class="number-circle">{% if not (existing_answers and outer_loop_index in existing_answers) %}{{ outer_loop_index }}{% endif %}</span>
-                                                    <span class="number-text">{{ outer_loop_index }}</span>
+                                                <span class="question-number">
+                                                    <span class="number-circle">{{ outer_loop_index + 1 }}</span>
+                                                    <span class="number-text">{{ outer_loop_index + 1 }}</span>
                                                 </span>
                                                 {{ question.question }}
                                                 {% if review_status == 'approved' %}
