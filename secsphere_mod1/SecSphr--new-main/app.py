@@ -181,32 +181,45 @@ def calculate_score_for_answer(question, answer):
     try:
         with open('devweb.csv', encoding='utf-8') as f:
             reader = csv.DictReader(f)
+            current_question = None
+            question_scores = {}
+            
             for row in reader:
                 q = row['Questions'].strip()
                 option = row['Options'].strip()
                 scores_text = row.get('Scores', '').strip()
                 
-                if q == question and option == answer and scores_text:
-                    # Parse the score from the CSV
+                # Track current question
+                if q:
+                    current_question = q
+                    question_scores = {}
+                
+                # Store score for each option of current question
+                if current_question and option and scores_text:
                     try:
                         score = int(scores_text)
-                        return score * 20  # Scale 1-5 to 20-100 scoring system
-                    except (ValueError, IndexError):
-                        return 0
+                        question_scores[option] = score
+                    except (ValueError, TypeError):
+                        pass
+                
+                # Check if we found a match for our question and answer
+                if current_question == question and answer in question_scores:
+                    return question_scores[answer] * 20  # Scale 1-5 to 20-100 scoring system
+                    
     except FileNotFoundError:
         print("CSV file not found, using default scoring")
     
     # Default scoring based on option letter if CSV parsing fails
     if answer.startswith('A)'):
-        return 20  # Lowest score
+        return 20  # Lowest score (1*20)
     elif answer.startswith('B)'):
-        return 40
+        return 40  # (2*20)
     elif answer.startswith('C)'):
-        return 60
+        return 60  # (3*20)
     elif answer.startswith('D)'):
-        return 80
+        return 80  # (4*20)
     elif answer.startswith('E)'):
-        return 100  # Highest score
+        return 100  # Highest score (5*20)
     else:
         # Fallback to original logic
         if answer.lower() in ['yes', 'fully implemented', 'high']:
@@ -214,7 +227,7 @@ def calculate_score_for_answer(question, answer):
         elif answer.lower() in ['partially', 'medium']:
             return 50
         elif answer.lower() in ['no', 'not implemented', 'low']:
-            return 0
+            return 20
         else:
             return 25
 
@@ -913,26 +926,45 @@ def api_product_scores(product_id):
     # Build scoring map from CSV
     with open('devweb.csv', encoding='utf-8') as f:
         reader = csv.DictReader(f)
+        current_question = None
+        current_dimension = None
+        question_options = {}
+        
         for row in reader:
             dimension = row['Dimensions'].strip()
             question = row['Questions'].strip()
-            if question:  # Only process rows with questions
-                options = [o.strip() for o in row['Options'].split('\n') if o.strip()]
-                scores = []
-                for s in row['Scores'].split('\n'):
-                    s = s.strip()
-                    if s.isdigit():
-                        scores.append(int(s))
-                    else:
-                        scores.append(0)
-                
-                if len(options) == len(scores):
-                    csv_map[question] = dict(zip(options, scores))
-                    if dimension not in section_max_scores:
-                        section_max_scores[dimension] = 0
-                    if scores:
-                        section_max_scores[dimension] += max(scores)
-                        total_max_score += max(scores)
+            option = row['Options'].strip()
+            score_text = row.get('Scores', '').strip()
+            
+            # Track current dimension and question
+            if dimension:
+                current_dimension = dimension
+            if question:
+                current_question = question
+                question_options = {}
+                if current_dimension not in section_max_scores:
+                    section_max_scores[current_dimension] = 0
+            
+            # Store option and score for current question
+            if current_question and option and score_text:
+                try:
+                    score = int(score_text)
+                    question_options[option] = score
+                    csv_map[current_question] = question_options.copy()
+                except (ValueError, TypeError):
+                    pass
+        
+        # Calculate max scores per section
+        for question, options in csv_map.items():
+            if options:
+                max_score = max(options.values())
+                # Find dimension for this question
+                for dimension in section_max_scores:
+                    if any(resp.question == question and resp.section == dimension for resp in resps):
+                        if section_max_scores[dimension] == 0:  # Only add once per question
+                            section_max_scores[dimension] += max_score
+                            total_max_score += max_score
+                        break
     
     # Calculate actual scores
     question_scores = {}
@@ -995,26 +1027,44 @@ def api_all_scores():
             # Build scoring map
             with open('devweb.csv', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
+                current_question = None
+                current_dimension = None
+                question_options = {}
+                
                 for row in reader:
                     dimension = row['Dimensions'].strip()
                     question = row['Questions'].strip()
+                    option = row['Options'].strip()
+                    score_text = row.get('Scores', '').strip()
+                    
+                    # Track current dimension and question
+                    if dimension:
+                        current_dimension = dimension
                     if question:
-                        options = [o.strip() for o in row['Options'].split('\n') if o.strip()]
-                        scores = []
-                        for s in row['Scores'].split('\n'):
-                            s = s.strip()
-                            if s.isdigit():
-                                scores.append(int(s))
-                            else:
-                                scores.append(0)
-                        
-                        if len(options) == len(scores):
-                            csv_map[question] = dict(zip(options, scores))
-                            if dimension not in section_max_scores:
-                                section_max_scores[dimension] = 0
-                            if scores:
-                                section_max_scores[dimension] += max(scores)
-                                total_max_score += max(scores)
+                        current_question = question
+                        question_options = {}
+                        if current_dimension not in section_max_scores:
+                            section_max_scores[current_dimension] = 0
+                    
+                    # Store option and score for current question
+                    if current_question and option and score_text:
+                        try:
+                            score = int(score_text)
+                            question_options[option] = score
+                            csv_map[current_question] = question_options.copy()
+                        except (ValueError, TypeError):
+                            pass
+                
+                # Calculate max scores per section
+                for question, options in csv_map.items():
+                    if options:
+                        max_score = max(options.values())
+                        # Find dimension for this question
+                        for dimension in section_max_scores:
+                            if any(resp.question == question and resp.section == dimension for resp in resps):
+                                section_max_scores[dimension] += max_score
+                                total_max_score += max_score
+                                break
             
             # Calculate scores
             for r in resps:
