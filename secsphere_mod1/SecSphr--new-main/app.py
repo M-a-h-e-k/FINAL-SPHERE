@@ -178,7 +178,6 @@ def init_database():
 
 def calculate_score_for_answer(question, answer):
     """Calculate score for a specific question-answer pair based on CSV data"""
-    scores_map = {}
     try:
         with open('devweb.csv', encoding='utf-8') as f:
             reader = csv.DictReader(f)
@@ -190,22 +189,34 @@ def calculate_score_for_answer(question, answer):
                 if q == question and option == answer and scores_text:
                     # Parse the score from the CSV
                     try:
-                        score = int(scores_text.split('\n')[0]) if '\n' in scores_text else int(scores_text)
-                        return score
+                        score = int(scores_text)
+                        return score * 20  # Scale 1-5 to 20-100 scoring system
                     except (ValueError, IndexError):
                         return 0
     except FileNotFoundError:
         print("CSV file not found, using default scoring")
     
-    # Default scoring if CSV parsing fails
-    if answer.lower() in ['yes', 'fully implemented', 'high']:
-        return 100
-    elif answer.lower() in ['partially', 'medium']:
-        return 50
-    elif answer.lower() in ['no', 'not implemented', 'low']:
-        return 0
+    # Default scoring based on option letter if CSV parsing fails
+    if answer.startswith('A)'):
+        return 20  # Lowest score
+    elif answer.startswith('B)'):
+        return 40
+    elif answer.startswith('C)'):
+        return 60
+    elif answer.startswith('D)'):
+        return 80
+    elif answer.startswith('E)'):
+        return 100  # Highest score
     else:
-        return 25
+        # Fallback to original logic
+        if answer.lower() in ['yes', 'fully implemented', 'high']:
+            return 100
+        elif answer.lower() in ['partially', 'medium']:
+            return 50
+        elif answer.lower() in ['no', 'not implemented', 'low']:
+            return 0
+        else:
+            return 25
 
 def update_product_status(product_id, user_id):
     """Update product status based on current responses and reviews"""
@@ -638,6 +649,20 @@ def fill_questionnaire_section(product_id, section_idx):
         s.section for s in QuestionnaireResponse.query.filter_by(product_id=product_id, user_id=session['user_id']).distinct(QuestionnaireResponse.section)
     ]
     progress = [(i, s, (s in completed_sections)) for i, s in enumerate(sections)]
+    
+    # Get review status for questions in this section
+    question_review_status = {}
+    if existing_responses:
+        response_ids = [resp.id for resp in existing_responses]
+        lead_comments = LeadComment.query.filter(LeadComment.response_id.in_(response_ids)).all()
+        for comment in lead_comments:
+            for resp in existing_responses:
+                if resp.id == comment.response_id:
+                    for i, q in enumerate(questions):
+                        if q['question'] == resp.question:
+                            question_review_status[i] = comment.status
+                            break
+    
     return render_template(
         'fill_questionnaire_section.html',
         product=product,
@@ -646,7 +671,8 @@ def fill_questionnaire_section(product_id, section_idx):
         section_idx=section_idx,
         total_sections=len(sections),
         progress=progress,
-        existing_answers=existing_answers
+        existing_answers=existing_answers,
+        question_review_status=question_review_status
     )
 
 @app.route('/product/<int:product_id>/results')
@@ -681,22 +707,77 @@ def client_reply_comment(comment_id):
         return redirect(url_for('dashboard'))
     
     reply_text = request.form['reply']
+    evidence_file = request.files.get('evidence')
+    
     if reply_text.strip():
+        evidence_path = None
+        # Handle evidence upload if provided
+        if evidence_file and evidence_file.filename and allowed_file(evidence_file.filename):
+            filename = secure_filename(evidence_file.filename)
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            filename = f"{timestamp}_{filename}"
+            evidence_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            os.makedirs(os.path.dirname(evidence_path), exist_ok=True)
+            evidence_file.save(evidence_path)
+        
         # Create a reply comment
         reply_comment = LeadComment(
             response_id=parent_comment.response_id,
             lead_id=parent_comment.lead_id,  # Send back to the original lead
             client_id=session['user_id'],
             product_id=parent_comment.product_id,
-            comment=f"Client Reply: {reply_text}",
+            comment=reply_text,  # Remove the "Client Reply:" prefix for cleaner display
             status='client_reply',
             parent_comment_id=comment_id
         )
         db.session.add(reply_comment)
+        
+        # If evidence provided, also update the original response
+        if evidence_path and parent_comment.response_id:
+            original_response = QuestionnaireResponse.query.get(parent_comment.response_id)
+            if original_response:
+                original_response.evidence_path = evidence_path
+                original_response.comment = reply_text
+        
         db.session.commit()
         flash('Reply sent to lead successfully.')
     
     return redirect(request.referrer or url_for('client_comments'))
+
+@app.route('/lead/comment/<int:comment_id>/reply', methods=['POST'])
+@login_required('lead')
+def lead_reply_comment(comment_id):
+    parent_comment = LeadComment.query.get_or_404(comment_id)
+    if parent_comment.lead_id != session['user_id']:
+        flash('Unauthorized access.')
+        return redirect(url_for('dashboard'))
+    
+    reply_text = request.form['reply']
+    status = request.form.get('review_status', 'pending')
+    
+    if reply_text.strip():
+        # Create a reply comment
+        reply_comment = LeadComment(
+            response_id=parent_comment.response_id,
+            lead_id=session['user_id'],
+            client_id=parent_comment.client_id,
+            product_id=parent_comment.product_id,
+            comment=reply_text,
+            status=status,
+            parent_comment_id=comment_id
+        )
+        db.session.add(reply_comment)
+        
+        # Update the original response if needed
+        if parent_comment.response_id and status in ['needs_revision', 'rejected']:
+            original_response = QuestionnaireResponse.query.get(parent_comment.response_id)
+            if original_response:
+                original_response.is_reviewed = False  # Allow client to modify
+        
+        db.session.commit()
+        flash('Reply sent to client successfully.')
+    
+    return redirect(request.referrer or url_for('dashboard'))
 
 @app.route('/review/<int:response_id>', methods=['GET', 'POST'])
 @login_required('lead')

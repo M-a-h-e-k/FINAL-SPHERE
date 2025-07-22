@@ -102,14 +102,38 @@
                                     <h6 class="mb-3">
                                         <i class="bi bi-reply me-2"></i>Reply to Reviewer
                                     </h6>
-                                    <form method="post" action="{{ url_for('client_reply_comment', comment_id=comment.id) }}">
+                                    <form method="post" action="{{ url_for('client_reply_comment', comment_id=comment.id) }}" enctype="multipart/form-data">
                                         <div class="mb-3">
+                                            <label class="form-label">
+                                                <i class="bi bi-chat-text me-2"></i>Your Reply:
+                                            </label>
                                             <textarea class="form-control" name="reply" rows="3" 
                                                       placeholder="Type your reply here..." required></textarea>
                                         </div>
+                                        
+                                        {% if comment.status in ['needs_revision', 'rejected'] %}
+                                        <div class="mb-3">
+                                            <label class="form-label">
+                                                <i class="bi bi-paperclip me-2"></i>Evidence (Optional):
+                                            </label>
+                                            <input type="file" class="form-control" name="evidence" 
+                                                   accept=".csv,.txt,.pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                            <div class="form-text">
+                                                {% if comment.status == 'needs_revision' %}
+                                                    Upload additional evidence to address the reviewer's feedback.
+                                                {% else %}
+                                                    Upload new evidence to support your re-submission.
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                        
                                         <div class="d-flex gap-2">
                                             <button type="submit" class="btn btn-success btn-sm">
                                                 <i class="bi bi-send me-1"></i>Send Reply
+                                                {% if comment.status in ['needs_revision', 'rejected'] %}
+                                                    & Update Evidence
+                                                {% endif %}
                                             </button>
                                             <button type="button" class="btn btn-outline-secondary btn-sm" 
                                                     data-bs-toggle="collapse" 
@@ -128,19 +152,66 @@
                             <h6 class="text-muted mb-2">
                                 <i class="bi bi-chat-left-dots me-2"></i>Conversation Thread
                             </h6>
-                            {% for reply in comment.replies %}
-                            <div class="card bg-light border-0 ms-4 mb-2">
+                            {% for reply in comment.replies|sort(attribute='created_at') %}
+                            <div class="card border-0 mb-2 {% if reply.client_id == session['user_id'] %}ms-4 bg-primary bg-opacity-10{% else %}me-4 bg-light{% endif %}">
                                 <div class="card-body py-2">
                                     <div class="d-flex justify-content-between align-items-start">
-                                        <div>
-                                            <strong>{{ reply.client.username if reply.client_id == session['user_id'] else reply.lead.username }}</strong>
-                                            <small class="text-muted ms-2">{{ reply.created_at.strftime('%b %d, %Y at %I:%M %p') }}</small>
+                                        <div class="d-flex align-items-center">
+                                            <div class="avatar bg-{% if reply.client_id == session['user_id'] %}primary{% else %}secondary{% endif %} text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; font-size: 0.7rem;">
+                                                {{ (reply.client.username if reply.client_id == session['user_id'] else reply.lead.username)[0].upper() }}
+                                            </div>
+                                            <div>
+                                                <strong class="text-{% if reply.client_id == session['user_id'] %}primary{% else %}secondary{% endif %}">
+                                                    {{ 'You' if reply.client_id == session['user_id'] else reply.lead.username }}
+                                                </strong>
+                                                <small class="text-muted ms-2">{{ reply.created_at.strftime('%b %d, %Y at %I:%M %p') }}</small>
+                                            </div>
                                         </div>
-                                        <span class="badge bg-{% if reply.status == 'client_reply' %}info{% else %}primary{% endif %} rounded-pill">
-                                            {{ 'You' if reply.client_id == session['user_id'] else 'Lead' }}
+                                        <span class="badge bg-{% if reply.status == 'client_reply' %}info{% elif reply.status == 'approved' %}success{% elif reply.status == 'needs_revision' %}warning{% elif reply.status == 'rejected' %}danger{% else %}secondary{% endif %} rounded-pill">
+                                            {{ reply.status.replace('_', ' ').title() }}
                                         </span>
                                     </div>
-                                    <p class="mb-0 mt-2">{{ reply.comment.replace('Client Reply: ', '') if reply.comment.startswith('Client Reply: ') else reply.comment }}</p>
+                                    <div class="mt-2 {% if reply.client_id == session['user_id'] %}ms-4{% else %}ms-4{% endif %}">
+                                        <p class="mb-0">{{ reply.comment }}</p>
+                                        
+                                        {% if reply.client_id != session['user_id'] and reply.status in ['needs_revision', 'rejected'] %}
+                                        <div class="mt-2">
+                                            <button class="btn btn-outline-primary btn-sm" 
+                                                    data-bs-toggle="collapse" 
+                                                    data-bs-target="#reply-to-{{ reply.id }}">
+                                                <i class="bi bi-reply me-1"></i>Reply to this
+                                            </button>
+                                        </div>
+                                        <div class="collapse mt-2" id="reply-to-{{ reply.id }}">
+                                            <div class="card bg-light border-0">
+                                                <div class="card-body">
+                                                    <form method="post" action="{{ url_for('client_reply_comment', comment_id=reply.id) }}" enctype="multipart/form-data">
+                                                        <div class="mb-2">
+                                                            <textarea class="form-control form-control-sm" name="reply" rows="2" 
+                                                                      placeholder="Type your response..." required></textarea>
+                                                        </div>
+                                                        {% if reply.status in ['needs_revision', 'rejected'] %}
+                                                        <div class="mb-2">
+                                                            <input type="file" class="form-control form-control-sm" name="evidence" 
+                                                                   accept=".csv,.txt,.pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                                        </div>
+                                                        {% endif %}
+                                                        <div class="d-flex gap-1">
+                                                            <button type="submit" class="btn btn-primary btn-sm">
+                                                                <i class="bi bi-send me-1"></i>Send
+                                                            </button>
+                                                            <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                                                    data-bs-toggle="collapse" 
+                                                                    data-bs-target="#reply-to-{{ reply.id }}">
+                                                                Cancel
+                                                            </button>
+                                                        </div>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endif %}
+                                    </div>
                                 </div>
                             </div>
                             {% endfor %}
