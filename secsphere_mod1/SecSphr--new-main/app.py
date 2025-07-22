@@ -539,7 +539,11 @@ def dashboard():
             })
         
         # Get all responses and comments for admin view
-        all_responses = QuestionnaireResponse.query.order_by(QuestionnaireResponse.created_at.desc()).limit(100).all()
+        all_responses = db.session.query(QuestionnaireResponse, User, Product).join(
+            User, QuestionnaireResponse.user_id == User.id
+        ).join(
+            Product, QuestionnaireResponse.product_id == Product.id
+        ).order_by(QuestionnaireResponse.created_at.desc()).limit(100).all()
         all_comments = LeadComment.query.order_by(LeadComment.created_at.desc()).limit(50).all()
         
         return render_template('dashboard_superuser.html', products_data=products_data, all_responses=all_responses, all_comments=all_comments)

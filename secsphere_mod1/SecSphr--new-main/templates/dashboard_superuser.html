@@ -205,18 +205,18 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                {% for response in all_responses %}
+                                {% for response, user, product in all_responses %}
                                 <tr>
                                     <td>{{ response.id }}</td>
                                     <td>
                                         <div class="d-flex align-items-center">
                                             <i class="bi bi-person-circle me-2"></i>
-                                            {{ response.user.username }}
-                                            <small class="text-muted ms-1">({{ response.user.organization or 'N/A' }})</small>
+                                            {{ user.username }}
+                                            <small class="text-muted ms-1">({{ user.organization or 'N/A' }})</small>
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-primary">{{ response.product.name }}</span>
+                                        <span class="badge bg-primary">{{ product.name }}</span>
                                     </td>
                                     <td>{{ response.section[:20] }}...</td>
                                     <td>

@@ -6,7 +6,7 @@
 <div class="container my-4">
 <div class="dashboard-header text-center mb-4">
     <h1 class="display-6 fw-bold mb-2">
-        <i class="bi bi-person-badge me-3"></i>Lead Review Dashboard
+        <i class="bi bi-person-badge me-3"></i>Reviewer Dashboard
     </h1>
     <p class="lead mb-0">Review and manage questionnaire responses from clients</p>
 </div>
@@ -154,77 +154,104 @@
                                 <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="product-{{ product_id }}" 
                                      role="tabpanel" aria-labelledby="product-{{ product_id }}-tab">
                                     
-                                    <!-- Questions Grid - Clean Layout -->
-                                    <div class="questions-grid">
-                                        {% for resp in product_data.responses %}
-                                        <div class="question-card-clean mb-3 {% if resp.lead_comments|first %}status-{{ (resp.lead_comments|first).status }}{% else %}status-pending{% endif %}">
-                                            <div class="card h-100 border-0 shadow-sm">
-                                                <div class="card-body p-3">
-                                                    <div class="d-flex align-items-start justify-content-between mb-2">
-                                                        <div class="question-header d-flex align-items-center">
-                                                            <span class="question-number-clean me-2">{{ loop.index }}</span>
-                                                            <span class="badge badge-section me-2">{{ resp.section }}</span>
-                                                        </div>
-                                                        <div class="question-status">
-                                                            {% set lead_comment = resp.lead_comments|first %}
-                                                            {% if lead_comment %}
-                                                                {% if lead_comment.status == 'approved' %}
-                                                                    <span class="badge bg-success">
-                                                                        <i class="bi bi-check-circle me-1"></i>Approved
-                                                                    </span>
-                                                                {% elif lead_comment.status == 'needs_revision' %}
-                                                                    <span class="badge bg-warning">
-                                                                        <i class="bi bi-exclamation-triangle me-1"></i>Needs Revision
-                                                                    </span>
-                                                                {% elif lead_comment.status == 'rejected' %}
-                                                                    <span class="badge bg-danger">
-                                                                        <i class="bi bi-x-circle me-1"></i>Rejected
-                                                                    </span>
-                                                                {% else %}
-                                                                    <span class="badge bg-secondary">Pending</span>
-                                                                {% endif %}
-                                                            {% else %}
-                                                                <span class="badge bg-secondary">Pending</span>
-                                                            {% endif %}
-                                                        </div>
-                                                    </div>
-                                                    
-                                                    <div class="question-content mb-3">
-                                                        <p class="question-text-clean mb-2">{{ resp.question }}</p>
-                                                        <div class="answer-display">
-                                                            <div class="d-flex align-items-center mb-2">
-                                                                <i class="bi bi-arrow-right text-primary me-2"></i>
-                                                                <span class="badge bg-success answer-badge">{{ resp.answer }}</span>
-                                                                {% if resp.evidence_path %}
-                                                                    <a href="/{{ resp.evidence_path }}" target="_blank" 
-                                                                       class="btn btn-link btn-sm text-decoration-none ms-2 p-0" 
-                                                                       title="View Evidence">
-                                                                        <i class="bi bi-paperclip text-primary"></i>
+                                    <!-- Section-wise Questions Layout -->
+                                    {% set sections = {} %}
+                                    {% for resp in product_data.responses %}
+                                        {% if resp.section not in sections %}
+                                            {% set _ = sections.update({resp.section: []}) %}
+                                        {% endif %}
+                                        {% set _ = sections[resp.section].append(resp) %}
+                                    {% endfor %}
+                                    
+                                    {% for section_name, section_responses in sections.items() %}
+                                    <div class="section-container mb-4">
+                                        <div class="card border-0 shadow-sm">
+                                            <div class="card-header bg-gradient-primary text-white">
+                                                <div class="d-flex align-items-center justify-content-between">
+                                                    <h6 class="mb-0">
+                                                        <i class="bi bi-folder me-2"></i>{{ section_name }}
+                                                    </h6>
+                                                    <span class="badge bg-light text-dark">{{ section_responses|length }} questions</span>
+                                                </div>
+                                            </div>
+                                            <div class="card-body p-0">
+                                                <div class="table-responsive">
+                                                    <table class="table table-hover mb-0">
+                                                        <thead class="table-light">
+                                                            <tr>
+                                                                <th width="5%">#</th>
+                                                                <th width="40%">Question</th>
+                                                                <th width="15%">Answer</th>
+                                                                <th width="15%">Status</th>
+                                                                <th width="10%">Evidence</th>
+                                                                <th width="15%">Actions</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            {% for resp in section_responses %}
+                                                            <tr class="{% if resp.lead_comments|first %}status-{{ (resp.lead_comments|first).status }}{% else %}status-pending{% endif %}">
+                                                                <td>
+                                                                    <span class="question-number-clean">{{ loop.index }}</span>
+                                                                </td>
+                                                                <td>
+                                                                    <p class="mb-1 fw-medium">{{ resp.question[:80] }}{% if resp.question|length > 80 %}...{% endif %}</p>
+                                                                    {% if resp.comment %}
+                                                                    <small class="text-muted">
+                                                                        <i class="bi bi-chat-dots me-1"></i>{{ resp.comment[:50] }}{% if resp.comment|length > 50 %}...{% endif %}
+                                                                    </small>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td>
+                                                                    <span class="badge bg-success">{{ resp.answer }}</span>
+                                                                </td>
+                                                                <td>
+                                                                    {% set lead_comment = resp.lead_comments|first %}
+                                                                    {% if lead_comment %}
+                                                                        {% if lead_comment.status == 'approved' %}
+                                                                            <span class="badge bg-success">
+                                                                                <i class="bi bi-check-circle me-1"></i>Approved
+                                                                            </span>
+                                                                        {% elif lead_comment.status == 'needs_revision' %}
+                                                                            <span class="badge bg-warning">
+                                                                                <i class="bi bi-exclamation-triangle me-1"></i>Needs Revision
+                                                                            </span>
+                                                                        {% elif lead_comment.status == 'rejected' %}
+                                                                            <span class="badge bg-danger">
+                                                                                <i class="bi bi-x-circle me-1"></i>Rejected
+                                                                            </span>
+                                                                        {% else %}
+                                                                            <span class="badge bg-secondary">Pending</span>
+                                                                        {% endif %}
+                                                                    {% else %}
+                                                                        <span class="badge bg-secondary">Pending</span>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td>
+                                                                    {% if resp.evidence_path %}
+                                                                        <a href="/{{ resp.evidence_path }}" target="_blank" 
+                                                                           class="btn btn-outline-info btn-sm" 
+                                                                           title="View Evidence">
+                                                                            <i class="bi bi-paperclip"></i>
+                                                                        </a>
+                                                                    {% else %}
+                                                                        <span class="text-muted">-</span>
+                                                                    {% endif %}
+                                                                </td>
+                                                                <td>
+                                                                    <a href="{{ url_for('review_questionnaire', response_id=resp.id) }}" 
+                                                                       class="btn btn-outline-primary btn-sm">
+                                                                        <i class="bi bi-pencil-square me-1"></i>Review
                                                                     </a>
-                                                                {% endif %}
-                                                            </div>
-                                                        </div>
-                                                        
-                                                        {% if resp.comment %}
-                                                        <div class="client-comment">
-                                                            <small class="text-muted">
-                                                                <i class="bi bi-chat-dots me-1"></i>{{ resp.comment[:100] }}{% if resp.comment|length > 100 %}...{% endif %}
-                                                            </small>
-                                                        </div>
-                                                        {% endif %}
-                                                    </div>
-                                                    
-                                                    <div class="question-actions">
-                                                        <a href="{{ url_for('review_questionnaire', response_id=resp.id) }}" 
-                                                           class="btn btn-outline-primary btn-sm w-100">
-                                                            <i class="bi bi-pencil-square me-1"></i>Review
-                                                        </a>
-                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                            {% endfor %}
+                                                        </tbody>
+                                                    </table>
                                                 </div>
                                             </div>
                                         </div>
-                                        {% endfor %}
                                     </div>
+                                    {% endfor %}
                                 </div>
                                 {% endfor %}
                             </div>
@@ -261,11 +288,12 @@ function filterResponses() {
     const clientFilter = document.getElementById('clientFilter').value;
     const statusFilter = document.getElementById('statusFilter').value;
     
-    const questionCards = document.querySelectorAll('.question-card-clean');
+    const questionRows = document.querySelectorAll('.section-container tbody tr');
+    const sectionContainers = document.querySelectorAll('.section-container');
     
-    questionCards.forEach(card => {
-        const text = card.textContent.toLowerCase();
-        const clientId = card.closest('.tab-pane').id.replace('client-', '');
+    questionRows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        const clientId = row.closest('.tab-pane').id.replace('client-', '');
         
         let show = true;
         
@@ -277,7 +305,13 @@ function filterResponses() {
             show = false;
         }
         
-        card.style.display = show ? 'block' : 'none';
+        row.style.display = show ? '' : 'none';
+    });
+    
+    // Hide sections with no visible rows
+    sectionContainers.forEach(section => {
+        const visibleRows = section.querySelectorAll('tbody tr:not([style*="display: none"])');
+        section.style.display = visibleRows.length > 0 ? '' : 'none';
     });
 }
 
