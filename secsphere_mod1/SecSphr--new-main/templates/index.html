@@ -1,0 +1,1021 @@
+{% extends "base.html" %}
+
+{% block title %}SecureSphere - Professional Security Assessment Platform{% endblock %}
+
+{% block content %}
+<!-- Hero Section with Light Background -->
+<section class="hero-section-light">
+    <div class="container-fluid">
+        <div class="row align-items-center min-vh-100 py-5">
+            <div class="col-lg-6 order-2 order-lg-1">
+                <div class="hero-content">
+                    <div class="hero-badge mb-4">
+                        <span class="badge-content">
+                            <i class="bi bi-shield-check me-2"></i>
+                            Trusted by 1000+ Organizations
+                        </span>
+                    </div>
+                    <h1 class="hero-title mb-4">
+                        Secure Your Business with
+                        <span class="text-gradient-modern">SecureSphere</span>
+                    </h1>
+                    <p class="hero-description mb-4">
+                        Comprehensive security assessment platform that evaluates and enhances your organization's 
+                        security posture through intelligent questionnaires, expert analysis, and actionable insights.
+                    </p>
+                    <div class="hero-features mb-5">
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Enterprise-grade Security
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Expert-led Assessments
+                        </div>
+                        <div class="feature-item">
+                            <i class="bi bi-check-circle-fill text-success me-2"></i>
+                            Real-time Analytics
+                        </div>
+                    </div>
+                    <div class="hero-actions">
+                        <a href="{{ url_for('register') }}" class="btn btn-primary-modern btn-lg me-3 mb-2">
+                            <i class="bi bi-rocket-takeoff me-2"></i>Start Free Assessment
+                        </a>
+                        <a href="{{ url_for('login') }}" class="btn btn-outline-primary-modern btn-lg mb-2">
+                            <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6 order-1 order-lg-2">
+                <div class="hero-visual">
+                    <div class="dashboard-mockup">
+                        <div class="mockup-header">
+                            <div class="mockup-controls">
+                                <span class="dot red"></span>
+                                <span class="dot yellow"></span>
+                                <span class="dot green"></span>
+                            </div>
+                            <div class="mockup-title">SecureSphere Dashboard</div>
+                        </div>
+                        <div class="mockup-content">
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-icon success">
+                                        <i class="bi bi-shield-check"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <div class="stat-number">98%</div>
+                                        <div class="stat-label">Security Score</div>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon warning">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <div class="stat-number">3</div>
+                                        <div class="stat-label">Issues Found</div>
+                                    </div>
+                                </div>
+                                <div class="stat-card">
+                                    <div class="stat-icon info">
+                                        <i class="bi bi-graph-up"></i>
+                                    </div>
+                                    <div class="stat-info">
+                                        <div class="stat-number">24</div>
+                                        <div class="stat-label">Assessments</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="progress-section">
+                                <div class="progress-bar-demo">
+                                    <div class="progress-fill"></div>
+                                </div>
+                                <div class="progress-text">Assessment Progress: 85%</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features Section -->
+<section class="features-section-light">
+    <div class="container-fluid py-5">
+        <div class="text-center mb-5">
+            <div class="section-badge mb-3">
+                <i class="bi bi-star-fill me-2"></i>Features
+            </div>
+            <h2 class="section-title mb-3">Why Choose SecureSphere?</h2>
+            <p class="section-description">Comprehensive security assessment made simple and effective</p>
+        </div>
+        
+        <div class="row g-4">
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="feature-card-modern">
+                    <div class="feature-icon security">
+                        <i class="bi bi-shield-lock-fill"></i>
+                    </div>
+                    <h5 class="feature-title">Enterprise Security</h5>
+                    <p class="feature-description">Bank-grade encryption and security protocols protect your sensitive data throughout the assessment process.</p>
+                    <div class="feature-highlight">
+                        <i class="bi bi-check2 me-1"></i>SOC 2 Compliant
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="feature-card-modern">
+                    <div class="feature-icon performance">
+                        <i class="bi bi-lightning-charge-fill"></i>
+                    </div>
+                    <h5 class="feature-title">Lightning Fast</h5>
+                    <p class="feature-description">Streamlined assessment workflow with intelligent automation reduces time-to-insight by 75%.</p>
+                    <div class="feature-highlight">
+                        <i class="bi bi-check2 me-1"></i>Real-time Processing
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="feature-card-modern">
+                    <div class="feature-icon expert">
+                        <i class="bi bi-people-fill"></i>
+                    </div>
+                    <h5 class="feature-title">Expert Review</h5>
+                    <p class="feature-description">Certified security professionals review every assessment and provide actionable recommendations.</p>
+                    <div class="feature-highlight">
+                        <i class="bi bi-check2 me-1"></i>CISSP Certified
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-xl-3 col-lg-4 col-md-6">
+                <div class="feature-card-modern">
+                    <div class="feature-icon analytics">
+                        <i class="bi bi-graph-up-arrow"></i>
+                    </div>
+                    <h5 class="feature-title">Smart Analytics</h5>
+                    <p class="feature-description">Advanced analytics and reporting provide deep insights into your security posture and trends.</p>
+                    <div class="feature-highlight">
+                        <i class="bi bi-check2 me-1"></i>AI-Powered Insights
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Process Section -->
+<section class="process-section-light">
+    <div class="container-fluid py-5">
+        <div class="text-center mb-5">
+            <div class="section-badge mb-3">
+                <i class="bi bi-gear-fill me-2"></i>How It Works
+            </div>
+            <h2 class="section-title mb-3">Simple 3-Step Process</h2>
+            <p class="section-description">Get started in minutes and see results immediately</p>
+        </div>
+        
+        <div class="row g-4 align-items-center">
+            <div class="col-lg-4">
+                <div class="process-step-modern">
+                    <div class="step-number">01</div>
+                    <h4 class="step-title">Setup & Configure</h4>
+                    <p class="step-description">Create your account, add your products, and configure your security assessment parameters in under 5 minutes.</p>
+                    <div class="step-features">
+                        <div class="step-feature">
+                            <i class="bi bi-check2-circle text-success me-2"></i>
+                            Quick registration
+                        </div>
+                        <div class="step-feature">
+                            <i class="bi bi-check2-circle text-success me-2"></i>
+                            Easy product setup
+                        </div>
+                        <div class="step-feature">
+                            <i class="bi bi-check2-circle text-success me-2"></i>
+                            Custom configuration
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="process-step-modern">
+                    <div class="step-number">02</div>
+                    <h4 class="step-title">Complete Assessment</h4>
+                    <p class="step-description">Answer comprehensive questionnaires designed by security experts across all critical security dimensions.</p>
+                    <div class="step-features">
+                        <div class="step-feature">
+                            <i class="bi bi-check2-circle text-success me-2"></i>
+                            Expert-designed questions
+                        </div>
+                        <div class="step-feature">
+                            <i class="bi bi-check2-circle text-success me-2"></i>
+                            Evidence upload support
+                        </div>
+                        <div class="step-feature">
+                            <i class="bi bi-check2-circle text-success me-2"></i>
+                            Progress tracking
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="process-step-modern">
+                    <div class="step-number">03</div>
+                    <h4 class="step-title">Get Insights</h4>
+                    <p class="step-description">Receive detailed reports, expert recommendations, and actionable insights to improve your security posture.</p>
+                    <div class="step-features">
+                        <div class="step-feature">
+                            <i class="bi bi-check2-circle text-success me-2"></i>
+                            Detailed reports
+                        </div>
+                        <div class="step-feature">
+                            <i class="bi bi-check2-circle text-success me-2"></i>
+                            Expert recommendations
+                        </div>
+                        <div class="step-feature">
+                            <i class="bi bi-check2-circle text-success me-2"></i>
+                            Continuous monitoring
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Stats Section -->
+<section class="stats-section-light">
+    <div class="container-fluid py-5">
+        <div class="row g-4 text-center">
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item-modern">
+                    <div class="stat-icon-large">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <div class="stat-number-large">1000+</div>
+                    <div class="stat-label-large">Organizations Trust Us</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item-modern">
+                    <div class="stat-icon-large">
+                        <i class="bi bi-shield-check"></i>
+                    </div>
+                    <div class="stat-number-large">10K+</div>
+                    <div class="stat-label-large">Assessments Completed</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item-modern">
+                    <div class="stat-icon-large">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                    <div class="stat-number-large">98%</div>
+                    <div class="stat-label-large">Customer Satisfaction</div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-md-6">
+                <div class="stat-item-modern">
+                    <div class="stat-icon-large">
+                        <i class="bi bi-clock"></i>
+                    </div>
+                    <div class="stat-number-large">24/7</div>
+                    <div class="stat-label-large">Expert Support</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section class="cta-section-modern">
+    <div class="container-fluid py-5">
+        <div class="row justify-content-center">
+            <div class="col-lg-8 text-center">
+                <div class="cta-content">
+                    <h2 class="cta-title mb-4">Ready to Strengthen Your Security?</h2>
+                    <p class="cta-description mb-4">
+                        Join thousands of organizations that trust SecureSphere for comprehensive security assessments. 
+                        Start your free assessment today and get expert insights in minutes.
+                    </p>
+                    <div class="cta-actions">
+                        <a href="{{ url_for('register') }}" class="btn btn-cta-primary btn-lg me-3 mb-2">
+                            <i class="bi bi-rocket-takeoff me-2"></i>Start Free Assessment
+                        </a>
+                        <a href="#features" class="btn btn-outline-cta btn-lg mb-2">
+                            <i class="bi bi-info-circle me-2"></i>Learn More
+                        </a>
+                    </div>
+                    <div class="cta-guarantee mt-4">
+                        <i class="bi bi-shield-check text-success me-2"></i>
+                        <small class="text-muted">30-day money-back guarantee • No credit card required</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<style>
+/* Modern Light Theme Landing Page */
+:root {
+    --light-primary: #f8fafc;
+    --light-secondary: #f1f5f9;
+    --text-dark: #1e293b;
+    --text-light: #64748b;
+    --accent-blue: #3b82f6;
+    --accent-green: #10b981;
+    --accent-orange: #f59e0b;
+    --accent-purple: #8b5cf6;
+    --border-light: #e2e8f0;
+    --shadow-light: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+    --shadow-medium: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-large: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+/* Reset and Base */
+* {
+    box-sizing: border-box;
+}
+
+.main-wrapper {
+    background: var(--light-primary);
+    margin: 0;
+    padding: 0;
+}
+
+/* Hero Section */
+.hero-section-light {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    position: relative;
+    overflow: hidden;
+}
+
+.hero-section-light::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(45deg, rgba(59, 130, 246, 0.05) 0%, rgba(139, 92, 246, 0.05) 100%);
+    z-index: 1;
+}
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+    padding: 2rem 0;
+}
+
+.hero-badge {
+    display: inline-block;
+}
+
+.badge-content {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-blue);
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.hero-title {
+    font-size: clamp(2.5rem, 5vw, 3.5rem);
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1.2;
+}
+
+.text-gradient-modern {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.hero-description {
+    font-size: 1.25rem;
+    color: var(--text-light);
+    line-height: 1.6;
+    max-width: 600px;
+}
+
+.hero-features {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.feature-item {
+    font-size: 1rem;
+    color: var(--text-dark);
+    font-weight: 500;
+}
+
+.hero-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Modern Buttons */
+.btn-primary-modern {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    border: none;
+    color: white;
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-medium);
+}
+
+.btn-primary-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-large);
+    color: white;
+}
+
+.btn-outline-primary-modern {
+    background: white;
+    border: 2px solid var(--accent-blue);
+    color: var(--accent-blue);
+    padding: 0.875rem 2rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-primary-modern:hover {
+    background: var(--accent-blue);
+    color: white;
+    transform: translateY(-2px);
+}
+
+/* Dashboard Mockup */
+.hero-visual {
+    position: relative;
+    z-index: 2;
+    padding: 2rem;
+}
+
+.dashboard-mockup {
+    background: white;
+    border-radius: 16px;
+    box-shadow: var(--shadow-large);
+    overflow: hidden;
+    transform: perspective(1000px) rotateY(-5deg) rotateX(5deg);
+    transition: transform 0.3s ease;
+}
+
+.dashboard-mockup:hover {
+    transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+}
+
+.mockup-header {
+    background: var(--light-secondary);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.mockup-controls {
+    display: flex;
+    gap: 0.5rem;
+    margin-right: 1rem;
+}
+
+.dot {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+}
+
+.dot.red { background: #ef4444; }
+.dot.yellow { background: #f59e0b; }
+.dot.green { background: #10b981; }
+
+.mockup-title {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 0.9rem;
+}
+
+.mockup-content {
+    padding: 1.5rem;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.stat-card {
+    background: var(--light-secondary);
+    padding: 1rem;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.25rem;
+}
+
+.stat-icon.success { background: var(--accent-green); }
+.stat-icon.warning { background: var(--accent-orange); }
+.stat-icon.info { background: var(--accent-blue); }
+
+.stat-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+.progress-section {
+    margin-top: 1rem;
+}
+
+.progress-bar-demo {
+    background: var(--light-secondary);
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 0.5rem;
+}
+
+.progress-fill {
+    background: linear-gradient(90deg, var(--accent-blue) 0%, var(--accent-green) 100%);
+    height: 100%;
+    width: 85%;
+    border-radius: 4px;
+    animation: progressFill 2s ease-out;
+}
+
+@keyframes progressFill {
+    0% { width: 0%; }
+    100% { width: 85%; }
+}
+
+.progress-text {
+    font-size: 0.875rem;
+    color: var(--text-light);
+}
+
+/* Section Styling */
+.features-section-light,
+.process-section-light,
+.stats-section-light {
+    background: white;
+    position: relative;
+}
+
+.section-badge {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-blue);
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    display: inline-block;
+    border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.section-title {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.section-description {
+    font-size: 1.125rem;
+    color: var(--text-light);
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+/* Feature Cards */
+.feature-card-modern {
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    padding: 2rem;
+    text-align: center;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.feature-card-modern:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--shadow-large);
+    border-color: var(--accent-blue);
+}
+
+.feature-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 1.75rem;
+    color: white;
+}
+
+.feature-icon.security { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); }
+.feature-icon.performance { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); }
+.feature-icon.expert { background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); }
+.feature-icon.analytics { background: linear-gradient(135deg, #10b981 0%, #059669 100%); }
+
+.feature-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+}
+
+.feature-description {
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: 1rem;
+}
+
+.feature-highlight {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--accent-green);
+    padding: 0.5rem 1rem;
+    border-radius: 50px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    display: inline-block;
+}
+
+/* Process Steps */
+.process-step-modern {
+    text-align: center;
+    padding: 2rem;
+    background: white;
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    transition: all 0.3s ease;
+    height: 100%;
+}
+
+.process-step-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-medium);
+}
+
+.step-number {
+    font-size: 3rem;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    margin-bottom: 1rem;
+}
+
+.step-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-dark);
+    margin-bottom: 1rem;
+}
+
+.step-description {
+    color: var(--text-light);
+    line-height: 1.6;
+    margin-bottom: 1.5rem;
+}
+
+.step-features {
+    text-align: left;
+}
+
+.step-feature {
+    font-size: 0.9rem;
+    color: var(--text-dark);
+    margin-bottom: 0.5rem;
+}
+
+/* Stats */
+.stat-item-modern {
+    padding: 2rem 1rem;
+    text-align: center;
+}
+
+.stat-icon-large {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 1.5rem;
+    font-size: 2rem;
+    color: white;
+}
+
+.stat-number-large {
+    font-size: 3rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    line-height: 1;
+    margin-bottom: 0.5rem;
+}
+
+.stat-label-large {
+    font-size: 1.125rem;
+    color: var(--text-light);
+    font-weight: 500;
+}
+
+/* CTA Section */
+.cta-section-modern {
+    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    position: relative;
+}
+
+.cta-content {
+    max-width: 700px;
+    margin: 0 auto;
+}
+
+.cta-title {
+    font-size: clamp(2rem, 4vw, 2.5rem);
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+.cta-description {
+    font-size: 1.125rem;
+    color: var(--text-light);
+    line-height: 1.6;
+}
+
+.btn-cta-primary {
+    background: linear-gradient(135deg, var(--accent-blue) 0%, var(--accent-purple) 100%);
+    border: none;
+    color: white;
+    padding: 1rem 2.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: var(--shadow-medium);
+}
+
+.btn-cta-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-large);
+    color: white;
+}
+
+.btn-outline-cta {
+    background: white;
+    border: 2px solid var(--accent-blue);
+    color: var(--accent-blue);
+    padding: 1rem 2.5rem;
+    border-radius: 12px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-outline-cta:hover {
+    background: var(--accent-blue);
+    color: white;
+    transform: translateY(-2px);
+}
+
+.cta-guarantee {
+    background: white;
+    padding: 1rem 2rem;
+    border-radius: 12px;
+    border: 1px solid var(--border-light);
+    display: inline-block;
+}
+
+/* Responsive Design */
+@media (max-width: 991.98px) {
+    .hero-actions {
+        justify-content: center;
+    }
+    
+    .hero-description {
+        text-align: center;
+    }
+    
+    .hero-features {
+        align-items: center;
+    }
+    
+    .dashboard-mockup {
+        transform: none;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .hero-content {
+        text-align: center;
+        padding: 1rem 0;
+    }
+    
+    .hero-visual {
+        padding: 1rem;
+    }
+    
+    .feature-card-modern,
+    .process-step-modern {
+        padding: 1.5rem;
+    }
+    
+    .stat-item-modern {
+        padding: 1.5rem 0.5rem;
+    }
+    
+    .btn-primary-modern,
+    .btn-outline-primary-modern,
+    .btn-cta-primary,
+    .btn-outline-cta {
+        padding: 0.75rem 1.5rem;
+        font-size: 0.9rem;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .container-fluid {
+        padding: 1rem;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .cta-actions {
+        flex-direction: column;
+        align-items: center;
+    }
+    
+    .btn-primary-modern,
+    .btn-outline-primary-modern,
+    .btn-cta-primary,
+    .btn-outline-cta {
+        width: 100%;
+        max-width: 300px;
+    }
+}
+
+/* Cross-browser compatibility */
+@supports not (background-clip: text) {
+    .text-gradient-modern {
+        color: var(--accent-blue);
+    }
+}
+
+/* Smooth animations */
+@media (prefers-reduced-motion: no-preference) {
+    .feature-card-modern,
+    .process-step-modern,
+    .stat-item-modern {
+        animation: fadeInUp 0.6s ease-out forwards;
+        opacity: 0;
+    }
+    
+    .feature-card-modern:nth-child(1) { animation-delay: 0.1s; }
+    .feature-card-modern:nth-child(2) { animation-delay: 0.2s; }
+    .feature-card-modern:nth-child(3) { animation-delay: 0.3s; }
+    .feature-card-modern:nth-child(4) { animation-delay: 0.4s; }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+</style>
+
+<script>
+// Enhanced animations and interactions
+document.addEventListener('DOMContentLoaded', function() {
+    // Intersection Observer for scroll animations
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.animationPlayState = 'running';
+            }
+        });
+    }, observerOptions);
+    
+    // Observe all animated elements
+    document.querySelectorAll('.feature-card-modern, .process-step-modern, .stat-item-modern').forEach(el => {
+        observer.observe(el);
+    });
+    
+    // Counter animation for stats
+    const animateCounter = (element, target) => {
+        let current = 0;
+        const increment = target / 50;
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                current = target;
+                clearInterval(timer);
+            }
+            element.textContent = Math.floor(current) + (target >= 1000 ? '+' : '') + (target < 1 ? '%' : '');
+        }, 20);
+    };
+    
+    // Trigger counter animations when stats section is visible
+    const statsObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const numbers = entry.target.querySelectorAll('.stat-number-large');
+                numbers.forEach(num => {
+                    const target = parseInt(num.textContent.replace(/\D/g, ''));
+                    animateCounter(num, target);
+                });
+                statsObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.5 });
+    
+    const statsSection = document.querySelector('.stats-section-light');
+    if (statsSection) {
+        statsObserver.observe(statsSection);
+    }
+    
+    // Smooth scrolling for anchor links
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+            e.preventDefault();
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                target.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'start'
+                });
+            }
+        });
+    });
+    
+    // Add subtle parallax effect to hero section
+    let ticking = false;
+    function updateParallax() {
+        const scrolled = window.pageYOffset;
+        const hero = document.querySelector('.hero-section-light');
+        if (hero && scrolled < window.innerHeight) {
+            hero.style.transform = `translateY(${scrolled * 0.1}px)`;
+        }
+        ticking = false;
+    }
+    
+    function requestTick() {
+        if (!ticking) {
+            requestAnimationFrame(updateParallax);
+            ticking = true;
+        }
+    }
+    
+    window.addEventListener('scroll', requestTick, { passive: true });
+});
+</script>
+{% endblock %}

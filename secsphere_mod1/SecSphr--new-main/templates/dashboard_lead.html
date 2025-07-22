@@ -1,0 +1,307 @@
+{% extends "base.html" %}
+
+{% block title %}Lead Dashboard - SecureSphere{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+<div class="dashboard-header text-center mb-4">
+    <h1 class="display-6 fw-bold mb-2">
+        <i class="bi bi-person-badge me-3"></i>Lead Review Dashboard
+    </h1>
+    <p class="lead mb-0">Review and manage questionnaire responses from clients</p>
+</div>
+
+<!-- Dashboard Statistics -->
+<div class="dashboard-stats mb-4">
+    <div class="card stat-card text-center">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-8">
+                    <h3 class="mb-0">{{ clients_data|length }}</h3>
+                    <p class="mb-0">Total Clients</p>
+                </div>
+                <div class="col-4">
+                    <i class="bi bi-people icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card stat-card text-center">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-8">
+                    <h3 class="mb-0">{% set total_products = 0 %}{% for client_id, client_data in clients_data.items() %}{% set total_products = total_products + client_data.products|length %}{% endfor %}{{ total_products }}</h3>
+                    <p class="mb-0">Total Products</p>
+                </div>
+                <div class="col-4">
+                    <i class="bi bi-box-seam icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="card stat-card text-center">
+        <div class="card-body">
+            <div class="row align-items-center">
+                <div class="col-8">
+                    <h3 class="mb-0">{% set total_responses = 0 %}{% for client_id, client_data in clients_data.items() %}{% for product_id, product_data in client_data.products.items() %}{% set total_responses = total_responses + product_data.responses|length %}{% endfor %}{% endfor %}{{ total_responses }}</h3>
+                    <p class="mb-0">Total Responses</p>
+                </div>
+                <div class="col-4">
+                    <i class="bi bi-chat-square-text icon"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Filter and Search -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card dashboard-card">
+            <div class="card-body">
+                <div class="row align-items-center">
+                    <div class="col-md-4">
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-search"></i>
+                            </span>
+                            <input type="text" class="form-control" id="searchInput" placeholder="Search responses...">
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="clientFilter">
+                            <option value="">All Clients</option>
+                            {% for client_id, client_data in clients_data.items() %}
+                            <option value="{{ client_id }}">{{ client_data.user.username }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <select class="form-select" id="statusFilter">
+                            <option value="">All Status</option>
+                            <option value="pending">Pending Review</option>
+                            <option value="reviewed">Reviewed</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-outline-primary w-100" onclick="resetFilters()">
+                            <i class="bi bi-arrow-clockwise"></i> Reset
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Client Tabs Navigation -->
+{% if clients_data %}
+<div class="row">
+    <div class="col-12">
+        <div class="card dashboard-card">
+            <div class="card-header bg-gradient-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-clipboard-check me-2"></i>Questionnaire Responses
+                </h5>
+            </div>
+            <div class="card-body p-0">
+                <!-- Client Navigation Tabs -->
+                <nav class="nav nav-tabs" id="clientTabs" role="tablist">
+                    {% for client_id, client_data in clients_data.items() %}
+                    <button class="nav-link {% if loop.first %}active{% endif %}" id="client-{{ client_id }}-tab" 
+                            data-bs-toggle="tab" data-bs-target="#client-{{ client_id }}" type="button" 
+                            role="tab" aria-controls="client-{{ client_id }}" aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                        <i class="bi bi-person-circle me-2"></i>{{ client_data.user.username }}
+                        <span class="badge bg-primary ms-2">{{ client_data.products|length }} products</span>
+                    </button>
+                    {% endfor %}
+                </nav>
+
+                <!-- Client Tab Content -->
+                <div class="tab-content" id="clientTabContent">
+                    {% for client_id, client_data in clients_data.items() %}
+                    <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="client-{{ client_id }}" 
+                         role="tabpanel" aria-labelledby="client-{{ client_id }}-tab">
+                        <div class="p-4">
+                            <!-- Client Info Banner -->
+                            <div class="alert alert-info d-flex align-items-center mb-4">
+                                <i class="bi bi-building me-3 fs-4"></i>
+                                <div>
+                                    <h6 class="mb-1">{{ client_data.user.username }}</h6>
+                                    <small class="text-muted">{{ client_data.user.organization or 'No Organization' }}</small>
+                                </div>
+                            </div>
+
+                            <!-- Product Navigation Pills -->
+                            {% if client_data.products|length > 1 %}
+                            <nav class="nav nav-pills mb-4" id="product-nav-{{ client_id }}" role="tablist">
+                                {% for product_id, product_data in client_data.products.items() %}
+                                <button class="nav-link {% if loop.first %}active{% endif %}" id="product-{{ product_id }}-tab" 
+                                        data-bs-toggle="pill" data-bs-target="#product-{{ product_id }}" type="button" 
+                                        role="tab" aria-controls="product-{{ product_id }}" aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
+                                    <i class="bi bi-box-seam me-2"></i>{{ product_data.product.name }}
+                                    <span class="badge bg-light text-dark ms-2">{{ product_data.responses|length }}</span>
+                                </button>
+                                {% endfor %}
+                            </nav>
+                            {% endif %}
+
+                            <!-- Product Tab Content -->
+                            <div class="tab-content" id="product-content-{{ client_id }}">
+                                {% for product_id, product_data in client_data.products.items() %}
+                                <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="product-{{ product_id }}" 
+                                     role="tabpanel" aria-labelledby="product-{{ product_id }}-tab">
+                                    
+                                    <!-- Questions Grid - Clean Layout -->
+                                    <div class="questions-grid">
+                                        {% for resp in product_data.responses %}
+                                        <div class="question-card-clean mb-3 {% if resp.lead_comments|first %}status-{{ (resp.lead_comments|first).status }}{% else %}status-pending{% endif %}">
+                                            <div class="card h-100 border-0 shadow-sm">
+                                                <div class="card-body p-3">
+                                                    <div class="d-flex align-items-start justify-content-between mb-2">
+                                                        <div class="question-header d-flex align-items-center">
+                                                            <span class="question-number-clean me-2">{{ loop.index }}</span>
+                                                            <span class="badge badge-section me-2">{{ resp.section }}</span>
+                                                        </div>
+                                                        <div class="question-status">
+                                                            {% set lead_comment = resp.lead_comments|first %}
+                                                            {% if lead_comment %}
+                                                                {% if lead_comment.status == 'approved' %}
+                                                                    <span class="badge bg-success">
+                                                                        <i class="bi bi-check-circle me-1"></i>Approved
+                                                                    </span>
+                                                                {% elif lead_comment.status == 'needs_revision' %}
+                                                                    <span class="badge bg-warning">
+                                                                        <i class="bi bi-exclamation-triangle me-1"></i>Needs Revision
+                                                                    </span>
+                                                                {% elif lead_comment.status == 'rejected' %}
+                                                                    <span class="badge bg-danger">
+                                                                        <i class="bi bi-x-circle me-1"></i>Rejected
+                                                                    </span>
+                                                                {% else %}
+                                                                    <span class="badge bg-secondary">Pending</span>
+                                                                {% endif %}
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">Pending</span>
+                                                            {% endif %}
+                                                        </div>
+                                                    </div>
+                                                    
+                                                    <div class="question-content mb-3">
+                                                        <p class="question-text-clean mb-2">{{ resp.question }}</p>
+                                                        <div class="answer-display">
+                                                            <div class="d-flex align-items-center mb-2">
+                                                                <i class="bi bi-arrow-right text-primary me-2"></i>
+                                                                <span class="badge bg-success answer-badge">{{ resp.answer }}</span>
+                                                                {% if resp.evidence_path %}
+                                                                    <a href="/{{ resp.evidence_path }}" target="_blank" 
+                                                                       class="btn btn-link btn-sm text-decoration-none ms-2 p-0" 
+                                                                       title="View Evidence">
+                                                                        <i class="bi bi-paperclip text-primary"></i>
+                                                                    </a>
+                                                                {% endif %}
+                                                            </div>
+                                                        </div>
+                                                        
+                                                        {% if resp.comment %}
+                                                        <div class="client-comment">
+                                                            <small class="text-muted">
+                                                                <i class="bi bi-chat-dots me-1"></i>{{ resp.comment[:100] }}{% if resp.comment|length > 100 %}...{% endif %}
+                                                            </small>
+                                                        </div>
+                                                        {% endif %}
+                                                    </div>
+                                                    
+                                                    <div class="question-actions">
+                                                        <a href="{{ url_for('review_questionnaire', response_id=resp.id) }}" 
+                                                           class="btn btn-outline-primary btn-sm w-100">
+                                                            <i class="bi bi-pencil-square me-1"></i>Review
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {% endfor %}
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% else %}
+    <div class="row">
+        <div class="col-12">
+            <div class="card dashboard-card">
+                <div class="card-body text-center py-5">
+                    <i class="bi bi-inbox display-1 text-muted mb-3"></i>
+                    <h4 class="text-muted">No Responses Yet</h4>
+                    <p class="text-muted mb-4">Client questionnaire responses will appear here for review.</p>
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle me-2"></i>
+                        Responses are automatically added when clients complete questionnaires.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<script>
+// Search and Filter Functions
+function filterResponses() {
+    const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+    const clientFilter = document.getElementById('clientFilter').value;
+    const statusFilter = document.getElementById('statusFilter').value;
+    
+    const questionCards = document.querySelectorAll('.question-card-clean');
+    
+    questionCards.forEach(card => {
+        const text = card.textContent.toLowerCase();
+        const clientId = card.closest('.tab-pane').id.replace('client-', '');
+        
+        let show = true;
+        
+        if (searchTerm && !text.includes(searchTerm)) {
+            show = false;
+        }
+        
+        if (clientFilter && clientId !== clientFilter) {
+            show = false;
+        }
+        
+        card.style.display = show ? 'block' : 'none';
+    });
+}
+
+function resetFilters() {
+    document.getElementById('searchInput').value = '';
+    document.getElementById('clientFilter').value = '';
+    document.getElementById('statusFilter').value = '';
+    filterResponses();
+}
+
+// Event listeners
+document.getElementById('searchInput').addEventListener('input', filterResponses);
+document.getElementById('clientFilter').addEventListener('change', filterResponses);
+document.getElementById('statusFilter').addEventListener('change', filterResponses);
+
+// Animation for stats cards
+document.addEventListener('DOMContentLoaded', function() {
+    const statsCards = document.querySelectorAll('.stat-card');
+    statsCards.forEach((card, index) => {
+        setTimeout(() => {
+            card.style.transform = 'translateY(-5px)';
+        }, index * 200);
+    });
+});
+</script>
+</div>
+{% endblock %}

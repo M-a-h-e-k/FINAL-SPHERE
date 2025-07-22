@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Create Product - Admin - SecureSphere{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-gradient-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-plus-circle me-2"></i>Create New Product
+                    </h4>
+                </div>
+                <div class="card-body p-4">
+                    {% with messages = get_flashed_messages() %}
+                        {% if messages %}
+                            <div class="alert alert-info alert-dismissible fade show" role="alert">
+                                {% for message in messages %}
+                                    {{ message }}
+                                {% endfor %}
+                                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                            </div>
+                        {% endif %}
+                    {% endwith %}
+
+                    <form method="post" class="needs-validation" novalidate>
+                        <div class="mb-4">
+                            <label for="product_name" class="form-label fw-semibold">
+                                <i class="bi bi-box me-2"></i>Product Name
+                            </label>
+                            <input type="text" class="form-control form-control-lg" 
+                                   id="product_name" name="product_name" 
+                                   placeholder="Enter product name" required>
+                            <div class="invalid-feedback">
+                                Please provide a valid product name.
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="client_id" class="form-label fw-semibold">
+                                <i class="bi bi-person me-2"></i>Select Client
+                            </label>
+                            <select class="form-select form-select-lg" id="client_id" name="client_id" required>
+                                <option value="">Choose a client...</option>
+                                {% for client in clients %}
+                                <option value="{{ client.id }}">
+                                    {{ client.username }} ({{ client.email }})
+                                    {% if client.organization %} - {{ client.organization }}{% endif %}
+                                </option>
+                                {% endfor %}
+                            </select>
+                            <div class="invalid-feedback">
+                                Please select a client.
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-plus-circle me-2"></i>Create Product
+                            </button>
+                            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Client Summary -->
+            {% if clients %}
+            <div class="card mt-4 shadow-sm border-0">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="bi bi-people me-2"></i>Available Clients ({{ clients|length }})
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        {% for client in clients %}
+                        <div class="col-md-6 mb-2">
+                            <div class="d-flex align-items-center">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar bg-primary text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px;">
+                                        {{ client.username[0].upper() }}
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <div class="fw-semibold">{{ client.username }}</div>
+                                    <small class="text-muted">{{ client.email }}</small>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+// Bootstrap form validation
+(function() {
+    'use strict';
+    window.addEventListener('load', function() {
+        var forms = document.getElementsByClassName('needs-validation');
+        var validation = Array.prototype.filter.call(forms, function(form) {
+            form.addEventListener('submit', function(event) {
+                if (form.checkValidity() === false) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+                form.classList.add('was-validated');
+            }, false);
+        });
+    }, false);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,206 @@
+{% extends "base.html" %}
+
+{% block title %}Review Response - SecureSphere{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-10">
+        <div class="card shadow-lg border-0">
+            <div class="card-header bg-gradient-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>Review Questionnaire Response
+                </h4>
+                <p class="mb-0 opacity-75">Add your review comments and feedback</p>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-info-circle me-2"></i>Response Details
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="response-detail-item mb-3">
+                                    <label class="form-label fw-semibold text-primary">
+                                        <i class="bi bi-folder me-2"></i>Section:
+                                    </label>
+                                    <div class="detail-content">
+                                        <span class="badge bg-primary">{{ response.section }}</span>
+                                    </div>
+                                </div>
+                                
+                                <div class="response-detail-item mb-3">
+                                    <label class="form-label fw-semibold text-primary">
+                                        <i class="bi bi-question-circle me-2"></i>Question:
+                                    </label>
+                                    <div class="detail-content question-display">
+                                        {{ response.question }}
+                                    </div>
+                                </div>
+                                
+                                <div class="response-detail-item mb-3">
+                                    <label class="form-label fw-semibold text-primary">
+                                        <i class="bi bi-check-circle me-2"></i>Client Answer:
+                                    </label>
+                                    <div class="detail-content d-flex align-items-center">
+                                        <span class="badge bg-success me-2">{{ response.answer }}</span>
+                                        {% if response.evidence_path %}
+                                            <a href="/{{ response.evidence_path }}" target="_blank" 
+                                               class="btn btn-link btn-sm p-0 text-decoration-none" 
+                                               title="View Evidence File">
+                                                <i class="bi bi-paperclip text-primary"></i>
+                                            </a>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                                
+                                {% if response.comment %}
+                                <div class="response-detail-item mb-3">
+                                    <label class="form-label fw-semibold text-primary">
+                                        <i class="bi bi-chat-dots me-2"></i>Client Comment:
+                                    </label>
+                                    <div class="detail-content client-comment-display">
+                                        {{ response.comment }}
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <div class="card bg-light h-100">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-chat-left-dots me-2"></i>Your Review
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <form method="post" id="reviewForm">
+                                    <div class="mb-4">
+                                        <label for="lead_comment" class="form-label fw-semibold text-primary">
+                                            <i class="bi bi-chat-text me-2"></i>Review Comments:
+                                        </label>
+                                        <textarea name="lead_comment" id="lead_comment" class="form-control" 
+                                                  rows="4" placeholder="Add your review comments, feedback, or request additional information...">{{ response.comment }}</textarea>
+                                        <div class="form-text">
+                                            Provide constructive feedback or request clarification if needed.
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="mb-4">
+                                        <label class="form-label fw-semibold text-primary mb-3">
+                                            <i class="bi bi-clipboard-check me-2"></i>Review Status:
+                                        </label>
+                                        <div class="review-status-options">
+                                            <div class="form-check status-option mb-3">
+                                                <input class="form-check-input" type="radio" name="review_status" 
+                                                       id="approved" value="approved" checked onchange="handleStatusChange()">
+                                                <label class="form-check-label status-label" for="approved">
+                                                    <div class="status-header">
+                                                        <i class="bi bi-check-circle text-success me-2"></i>
+                                                        <span class="status-title">Approved</span>
+                                                    </div>
+                                                    <div class="status-description">
+                                                        <small><i class="bi bi-info-circle me-1"></i>Client questions will be frozen and cannot be modified</small>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                            
+                                            <div class="form-check status-option mb-3">
+                                                <input class="form-check-input" type="radio" name="review_status" 
+                                                       id="needs_revision" value="needs_revision" onchange="handleStatusChange()">
+                                                <label class="form-check-label status-label" for="needs_revision">
+                                                    <div class="status-header">
+                                                        <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                                                        <span class="status-title">Needs Revision</span>
+                                                    </div>
+                                                    <div class="status-description">
+                                                        <small><i class="bi bi-info-circle me-1"></i>Client can upload evidence and add comments for this specific question</small>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                            
+                                            <div class="form-check status-option mb-3">
+                                                <input class="form-check-input" type="radio" name="review_status" 
+                                                       id="rejected" value="rejected" onchange="handleStatusChange()">
+                                                <label class="form-check-label status-label" for="rejected">
+                                                    <div class="status-header">
+                                                        <i class="bi bi-x-circle text-danger me-2"></i>
+                                                        <span class="status-title">Rejected</span>
+                                                    </div>
+                                                    <div class="status-description">
+                                                        <small><i class="bi bi-info-circle me-1"></i>Client must re-answer the entire question with new evidence</small>
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="d-grid gap-2">
+                                        <button type="submit" class="btn btn-gradient-primary">
+                                            <i class="bi bi-check-lg me-2"></i>Submit Review
+                                        </button>
+                                        <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
+                                        </a>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function handleStatusChange() {
+    const status = document.querySelector('input[name="review_status"]:checked').value;
+    const commentTextarea = document.getElementById('lead_comment');
+    
+    // Update placeholder based on status
+    if (status === 'approved') {
+        commentTextarea.placeholder = 'Add approval comments (optional)...';
+    } else if (status === 'needs_revision') {
+        commentTextarea.placeholder = 'Specify what needs to be revised and provide guidance...';
+    } else if (status === 'rejected') {
+        commentTextarea.placeholder = 'Explain why this response is rejected and what is required...';
+    }
+}
+
+document.getElementById('reviewForm').addEventListener('submit', function(e) {
+    const comment = document.getElementById('lead_comment').value.trim();
+    const status = document.querySelector('input[name="review_status"]:checked').value;
+    
+    if (!comment && (status === 'needs_revision' || status === 'rejected')) {
+        e.preventDefault();
+        alert('Please add review comments for revision or rejection.');
+        document.getElementById('lead_comment').focus();
+        return;
+    }
+    
+    // Show confirmation with specific behavior explanation
+    const statusText = document.querySelector(`label[for="${status}"] .status-title`).textContent.trim();
+    let confirmMessage = `Are you sure you want to submit this review with status: ${statusText}?\n\n`;
+    
+    if (status === 'approved') {
+        confirmMessage += 'This will freeze the client\'s answer and they cannot modify it.';
+    } else if (status === 'needs_revision') {
+        confirmMessage += 'The client will be able to upload evidence and add comments for this specific question.';
+    } else if (status === 'rejected') {
+        confirmMessage += 'The client will need to re-answer the entire question with new evidence.';
+    }
+    
+    if (!confirm(confirmMessage)) {
+        e.preventDefault();
+    }
+});
+
+// Initialize placeholder
+handleStatusChange();
+</script>
+{% endblock %}
