@@ -538,18 +538,52 @@ body {
     margin-bottom: 0.5rem;
 }
 
+/* Question number styling - improved to show tick inside circle and number outside when selected */
 .question-number {
+    display: inline-flex;
+    align-items: center;
+    margin-right: 0.5rem;
+}
+
+.question-number .number-circle {
     display: inline-block;
-    width: 1.5rem;
-    height: 1.5rem;
+    width: 1.8rem;
+    height: 1.8rem;
     background: var(--primary-color);
     color: white;
     border-radius: 50%;
     text-align: center;
     font-size: var(--font-size-xs);
     font-weight: 600;
-    line-height: 1.5rem;
-    margin-right: 0.5rem;
+    line-height: 1.8rem;
+    transition: var(--transition);
+    position: relative;
+}
+
+.question-number.completed .number-circle {
+    background: var(--success-color);
+}
+
+.question-number.completed .number-circle::before {
+    content: '\f26e'; /* Bootstrap check icon */
+    font-family: 'bootstrap-icons';
+    font-size: 0.8rem;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.question-number.completed .number-text {
+    display: inline-block;
+    margin-left: 0.5rem;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--success-color);
+}
+
+.question-number:not(.completed) .number-text {
+    display: none;
 }
 
 .answer-options {
@@ -1980,39 +2014,81 @@ h6 { font-size: 0.825rem; font-weight: 600; }
 
 /* Improved Radio Button Alignment */
 .answer-options .form-check.answer-option {
-    margin-bottom: 0.75rem;
-    padding: 0.5rem;
+    margin-bottom: 0.875rem;
+    padding: 0.75rem;
+    border: 2px solid var(--input-border);
     border-radius: var(--border-radius);
     transition: var(--transition);
+    background: var(--lighter-bg);
+    position: relative;
 }
 
 .answer-options .form-check.answer-option:hover {
-    background: var(--light-bg);
+    background: var(--primary-lightest);
+    border-color: var(--primary-light);
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.answer-options .form-check.answer-option:has(.form-check-input:checked) {
+    background: var(--primary-lightest);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
 .answer-options .form-check-input {
-    width: 1.2rem;
-    height: 1.2rem;
-    border: 2px solid var(--border-light);
-    margin-top: 0.2rem;
+    width: 1.3rem;
+    height: 1.3rem;
+    border: 2px solid var(--input-border);
+    margin-top: 0.1rem;
     flex-shrink: 0;
+    transition: var(--transition);
 }
 
 .answer-options .form-check-input:checked {
     background-color: var(--primary-color);
     border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2);
+}
+
+.answer-options .form-check-input:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.25);
 }
 
 .answer-options .form-check-label {
     font-size: 0.95rem;
-    line-height: 1.4;
+    line-height: 1.5;
     color: var(--text-primary);
     cursor: pointer;
-    padding-top: 0.1rem;
+    font-weight: 500;
+    padding-top: 0.05rem;
 }
 
 .answer-options .form-check.answer-option.d-flex {
     align-items: flex-start;
+    min-height: 3rem;
+}
+
+/* Option letters (A, B, C, etc.) styling */
+.answer-options .form-check-label::before {
+    content: attr(data-option-letter);
+    display: inline-block;
+    width: 1.5rem;
+    height: 1.5rem;
+    background: var(--secondary-light);
+    color: white;
+    border-radius: 50%;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    line-height: 1.5rem;
+    margin-right: 0.5rem;
+    flex-shrink: 0;
+}
+
+.answer-options .form-check.answer-option:has(.form-check-input:checked) .form-check-label::before {
+    background: var(--primary-color);
 }
 
 /* File Upload Improvements */
@@ -2024,7 +2100,7 @@ h6 { font-size: 0.825rem; font-weight: 600; }
 }
 
 .file-upload-btn {
-    border: 1px solid var(--border-light);
+    border: 1px solid var(--input-border);
     background: white;
     color: var(--text-primary);
     padding: 0.375rem 0.75rem;
@@ -2056,29 +2132,28 @@ h6 { font-size: 0.825rem; font-weight: 600; }
 
 .status-badge-clean.in-progress {
     background: rgba(59, 130, 246, 0.1);
-    color: var(--accent-blue);
+    color: var(--primary-color);
 }
 
 .status-badge-clean.questions-done {
     background: rgba(245, 158, 11, 0.1);
-    color: var(--accent-orange);
+    color: var(--warning-color);
 }
 
 .status-badge-clean.under-review {
     background: rgba(139, 92, 246, 0.1);
-    color: var(--accent-purple);
+    color: #8b5cf6;
 }
 
 .status-badge-clean.review-done {
     background: rgba(16, 185, 129, 0.1);
-    color: var(--accent-green);
+    color: var(--success-color);
 }
 
 .status-badge-clean.completed {
     background: rgba(16, 185, 129, 0.2);
-    color: var(--accent-green);
-    border: 1px solid var(--accent-green);
-
+    color: var(--success-color);
+    border: 1px solid var(--success-color);
 }
 
 /* Review Status Options - Better Alignment */

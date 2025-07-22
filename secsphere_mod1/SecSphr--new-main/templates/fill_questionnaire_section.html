@@ -94,7 +94,10 @@
                                     <div class="col-md-8">
                                         <div class="mb-3">
                                             <h6 class="question-text">
-                                                <span class="question-number">{{ loop.index }}</span>
+                                                <span class="question-number {% if existing_answers and outer_loop_index in existing_answers %}completed{% endif %}">
+                                                    <span class="number-circle">{% if not (existing_answers and outer_loop_index in existing_answers) %}{{ outer_loop_index }}{% endif %}</span>
+                                                    <span class="number-text">{{ outer_loop_index }}</span>
+                                                </span>
                                                 {{ question.question }}
                                                 {% if review_status == 'approved' %}
                                                     <i class="bi bi-lock-fill text-success ms-2" title="Response approved and locked"></i>
@@ -115,9 +118,10 @@
                                                            data-section-idx="{{ section_idx }}"
                                                            data-product-id="{{ product.id }}"
                                                            {% if existing_answers and outer_loop_index in existing_answers and existing_answers[outer_loop_index].answer == option %}checked{% endif %}
-                                                           {% if review_status == 'approved' %}disabled{% endif %}
+                                                           {% set question_status = question_review_status.get(outer_loop_index) %}
+                                                           {% if question_status == 'approved' or question_status == 'under_review' or question_status == 'pending' %}disabled{% endif %}
                                                            required>
-                                                    <label class="form-check-label ms-2 flex-grow-1" for="answer_{{ outer_loop_index }}_{{ loop.index0 }}">
+                                                    <label class="form-check-label ms-2 flex-grow-1" for="answer_{{ outer_loop_index }}_{{ loop.index0 }}" data-option-letter="{{ 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[loop.index0] }}">
                                                         {{ option }}
                                                     </label>
                                                 </div>
@@ -130,41 +134,49 @@
                                         <div class="mb-3">
                                             <label class="form-label">
                                                 <i class="bi bi-chat-left-text me-2"></i>Additional Comments:
-                                                {% if review_status == 'needs_revision' %}
+                                                {% set question_status = question_review_status.get(outer_loop_index) %}
+                                                {% if question_status == 'needs_revision' %}
                                                     <span class="text-warning">(Required for revision)</span>
-                                                {% elif review_status == 'approved' %}
-                                                    <span class="text-muted">(Read-only)</span>
+                                                {% elif question_status == 'approved' %}
+                                                    <span class="text-success">(Approved - Locked)</span>
+                                                {% elif question_status == 'under_review' or question_status == 'pending' %}
+                                                    <span class="text-info">(Under Review - Locked)</span>
+                                                {% elif question_status == 'rejected' %}
+                                                    <span class="text-danger">(Rejected - Please revise)</span>
                                                 {% endif %}
                                             </label>
-                                            <textarea class="form-control" name="comment_{{ loop.index0 }}" 
+                                            <textarea class="form-control" name="comment_{{ outer_loop_index }}" 
                                                       rows="3" 
-                                                      placeholder="{% if review_status == 'needs_revision' %}Address the reviewer's feedback...{% elif review_status == 'rejected' %}Provide new information for re-submission...{% else %}Any additional information...{% endif %}"
-                                                      data-question-idx="{{ loop.index0 }}"
+                                                      placeholder="{% if question_status == 'needs_revision' %}Address the reviewer's feedback...{% elif question_status == 'rejected' %}Provide new information for re-submission...{% else %}Any additional information...{% endif %}"
+                                                      data-question-idx="{{ outer_loop_index }}"
                                                       data-section-idx="{{ section_idx }}"
                                                       data-product-id="{{ product.id }}"
-                                                      {% if review_status == 'approved' %}readonly{% endif %}
-                                                      {% if review_status == 'needs_revision' %}required{% endif %}>{% if existing_answers and loop.index0 in existing_answers %}{{ existing_answers[loop.index0].comment or '' }}{% endif %}</textarea>
+                                                      {% if question_status in ['approved', 'under_review', 'pending'] %}readonly{% endif %}
+                                                      {% if question_status in ['needs_revision', 'rejected'] %}required{% endif %}>{% if existing_answers and outer_loop_index in existing_answers %}{{ existing_answers[outer_loop_index].comment or '' }}{% endif %}</textarea>
                                         </div>
                                         
                                         <!-- File Upload Section -->
                                         <div class="mb-3">
-                                            {% if review_status != 'approved' %}
+                                            {% set question_status = question_review_status.get(outer_loop_index) %}
+                                            {% if question_status not in ['approved', 'under_review', 'pending'] %}
                                             <div class="file-upload-container">
                                                 <input type="file" class="form-control file-input" 
-                                                       name="evidence_{{ loop.index0 }}" 
-                                                       id="evidence_{{ loop.index0 }}"
+                                                       name="evidence_{{ outer_loop_index }}" 
+                                                       id="evidence_{{ outer_loop_index }}"
                                                        accept=".csv,.txt,.pdf,.jpg,.jpeg,.png,.doc,.docx"
-                                                       {% if review_status == 'rejected' %}required{% endif %}
+                                                       {% if question_status in ['rejected', 'needs_revision'] %}required{% endif %}
                                                        style="display: none;">
                                                 <button type="button" class="btn btn-outline-secondary btn-sm file-upload-btn" 
-                                                        onclick="document.getElementById('evidence_{{ loop.index0 }}').click()">
-                                                    <i class="bi bi-paperclip me-1"></i>Attach File
+                                                        onclick="document.getElementById('evidence_{{ outer_loop_index }}').click()">
+                                                    <i class="bi bi-paperclip me-1"></i>
+                                                    {% if question_status in ['rejected', 'needs_revision'] %}Update Evidence{% else %}Attach File{% endif %}
                                                 </button>
                                                 <small class="file-name text-muted ms-2"></small>
                                             </div>
                                             {% else %}
                                             <div class="text-muted small">
-                                                <i class="bi bi-lock-fill me-1"></i>Evidence locked
+                                                <i class="bi bi-lock-fill me-1"></i>
+                                                {% if question_status == 'approved' %}Evidence approved & locked{% else %}Evidence under review - locked{% endif %}
                                             </div>
                                             {% endif %}
                                             
