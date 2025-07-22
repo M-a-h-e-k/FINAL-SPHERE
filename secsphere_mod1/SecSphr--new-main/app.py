@@ -523,7 +523,20 @@ def dashboard():
                 'total_responses': len(responses)
             })
         
-        return render_template('dashboard_superuser.html', products_data=products_data)
+        # Get comments data for admin dashboard
+        recent_comments = LeadComment.query.order_by(LeadComment.created_at.desc()).limit(10).all()
+        total_comments = LeadComment.query.count()
+        approved_comments = LeadComment.query.filter_by(status='approved').count()
+        pending_comments = LeadComment.query.filter(LeadComment.status.in_(['pending', 'under_review', 'needs_revision'])).count()
+        rejected_comments = LeadComment.query.filter_by(status='rejected').count()
+        
+        return render_template('dashboard_superuser.html', 
+                             products_data=products_data,
+                             recent_comments=recent_comments,
+                             total_comments=total_comments,
+                             approved_comments=approved_comments,
+                             pending_comments=pending_comments,
+                             rejected_comments=rejected_comments)
     return redirect(url_for('index'))
 
 def is_assessment_complete(product_id, user_id):

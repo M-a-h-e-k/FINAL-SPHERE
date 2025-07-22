@@ -164,6 +164,93 @@
     </div>
 </div>
 
+<!-- Comments & Communication Section -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card dashboard-card">
+            <div class="card-header bg-gradient-primary text-white">
+                <h5 class="mb-0">
+                    <i class="bi bi-chat-left-dots me-2"></i>Client-Lead Communications
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <h6 class="mb-3"><i class="bi bi-chat-text me-2"></i>Recent Comments</h6>
+                        <div class="comments-list" style="max-height: 300px; overflow-y: auto;">
+                            {% if recent_comments %}
+                                {% for comment in recent_comments %}
+                                <div class="card mb-2 border-start border-primary border-3">
+                                    <div class="card-body py-2">
+                                        <div class="d-flex justify-content-between align-items-start">
+                                            <div>
+                                                <strong class="text-primary">{{ comment.lead.username }}</strong>
+                                                <i class="bi bi-arrow-right mx-1"></i>
+                                                <strong class="text-success">{{ comment.client.username }}</strong>
+                                            </div>
+                                            <small class="text-muted">{{ comment.created_at.strftime('%m/%d %H:%M') }}</small>
+                                        </div>
+                                        <p class="mb-1 small">{{ comment.comment[:100] }}{% if comment.comment|length > 100 %}...{% endif %}</p>
+                                        <div class="d-flex justify-content-between">
+                                            <span class="badge bg-{{ 'success' if comment.status == 'approved' else 'warning' if comment.status == 'needs_revision' else 'danger' if comment.status == 'rejected' else 'secondary' }}">
+                                                {{ comment.status.replace('_', ' ').title() }}
+                                            </span>
+                                            <small class="text-muted">{{ comment.product.name }}</small>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endfor %}
+                            {% else %}
+                                <div class="text-center text-muted py-3">
+                                    <i class="bi bi-chat-left-text fs-1"></i>
+                                    <p class="mt-2">No comments yet</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <h6 class="mb-3"><i class="bi bi-graph-up me-2"></i>Communication Stats</h6>
+                        <div class="row">
+                            <div class="col-6 mb-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-2">
+                                        <h5 class="mb-1 text-primary">{{ total_comments or 0 }}</h5>
+                                        <small class="text-muted">Total</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-2">
+                                        <h5 class="mb-1 text-success">{{ approved_comments or 0 }}</h5>
+                                        <small class="text-muted">Approved</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-2">
+                                        <h5 class="mb-1 text-warning">{{ pending_comments or 0 }}</h5>
+                                        <small class="text-muted">Review</small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-6 mb-2">
+                                <div class="card bg-light">
+                                    <div class="card-body text-center py-2">
+                                        <h5 class="mb-1 text-danger">{{ rejected_comments or 0 }}</h5>
+                                        <small class="text-muted">Rejected</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Filter and Search -->
 <div class="row mb-4">
     <div class="col-12">

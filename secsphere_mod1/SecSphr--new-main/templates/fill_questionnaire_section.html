@@ -16,13 +16,11 @@
                     <li class="list-group-item d-flex justify-content-between align-items-center 
                         {% if idx == section_idx %}active{% elif done %}text-success{% else %}text-muted{% endif %}">
                         <span>
-                            <i class="bi bi-{% if done %}check-circle-fill{% elif idx == section_idx %}arrow-right-circle-fill{% else %}circle{% endif %} me-2"></i>
+                            <i class="bi bi-{% if idx == section_idx %}arrow-right-circle-fill{% else %}circle{% endif %} me-2"></i>
                             <span class="d-none d-md-inline">{{ section }}</span>
                             <span class="d-md-none">{{ section[:15] }}{% if section|length > 15 %}...{% endif %}</span>
                         </span>
-                        {% if done %}
-                            <i class="bi bi-check-circle-fill text-success"></i>
-                        {% elif idx == section_idx %}
+                        {% if idx == section_idx %}
                             <span class="badge bg-primary">Current</span>
                         {% endif %}
                     </li>
@@ -94,9 +92,8 @@
                                     <div class="col-md-8">
                                         <div class="mb-3">
                                             <h6 class="question-text">
-                                                <span class="question-number {% if existing_answers and outer_loop_index in existing_answers %}completed{% endif %}">
-                                                    <span class="number-circle">{% if not (existing_answers and outer_loop_index in existing_answers) %}{{ outer_loop_index }}{% endif %}</span>
-                                                    <span class="number-text">{{ outer_loop_index }}</span>
+                                                <span class="question-number">
+                                                    <span class="number-circle">{{ loop.index }}</span>
                                                 </span>
                                                 {{ question.question }}
                                                 {% if review_status == 'approved' %}

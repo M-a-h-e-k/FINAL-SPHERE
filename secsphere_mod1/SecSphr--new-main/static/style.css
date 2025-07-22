@@ -538,52 +538,22 @@ body {
     margin-bottom: 0.5rem;
 }
 
-/* Question number styling - improved to show tick inside circle and number outside when selected */
 .question-number {
-    display: inline-flex;
-    align-items: center;
+    display: inline-block;
     margin-right: 0.5rem;
 }
 
 .question-number .number-circle {
     display: inline-block;
-    width: 1.8rem;
-    height: 1.8rem;
+    width: 1.5rem;
+    height: 1.5rem;
     background: var(--primary-color);
     color: white;
     border-radius: 50%;
     text-align: center;
     font-size: var(--font-size-xs);
     font-weight: 600;
-    line-height: 1.8rem;
-    transition: var(--transition);
-    position: relative;
-}
-
-.question-number.completed .number-circle {
-    background: var(--success-color);
-}
-
-.question-number.completed .number-circle::before {
-    content: '\f26e'; /* Bootstrap check icon */
-    font-family: 'bootstrap-icons';
-    font-size: 0.8rem;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
-
-.question-number.completed .number-text {
-    display: inline-block;
-    margin-left: 0.5rem;
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--success-color);
-}
-
-.question-number:not(.completed) .number-text {
-    display: none;
+    line-height: 1.5rem;
 }
 
 .answer-options {
@@ -2225,6 +2195,34 @@ h6 { font-size: 0.825rem; font-weight: 600; }
 
 .status-option:has(.form-check-input:checked) .status-title {
     color: var(--primary-dark);
+}
+
+/* Review page text alignment and wrapping */
+.question-display {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    hyphens: auto;
+    line-height: 1.5;
+    max-width: 100%;
+}
+
+.client-comment-display {
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.5;
+    max-width: 100%;
+}
+
+.detail-content {
+    max-width: 100%;
+    overflow: hidden;
+}
+
+.badge {
+    word-wrap: break-word;
+    white-space: normal;
+    max-width: 100%;
 }
 
 /* Responsive improvements for review page */
