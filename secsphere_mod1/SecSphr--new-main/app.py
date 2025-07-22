@@ -71,6 +71,7 @@ class LeadComment(db.Model):
     status = db.Column(db.String(20), default='pending')  # pending, approved, needs_revision, rejected, client_reply
     parent_comment_id = db.Column(db.Integer, db.ForeignKey('lead_comment.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    is_read = db.Column(db.Boolean, default=False)
     
     # Relationships
     parent_comment = db.relationship('LeadComment', remote_side=[id], backref='replies')
@@ -161,18 +162,19 @@ def init_database():
             except Exception as e:
                 print(f"Could not add created_at column: {e}")
         
-        # Remove the old is_read column if it exists
+        # Add is_read column if it doesn't exist
         try:
             db.session.execute(db.text("SELECT is_read FROM lead_comment LIMIT 1"))
-            # If we get here, the column exists, so we should remove it
-            try:
-                # SQLite doesn't support DROP COLUMN directly, so we'll just ignore it
-                print("Note: is_read column exists but will be ignored")
-            except Exception:
-                pass
+            print("Note: is_read column already exists")
         except Exception:
-            # Column doesn't exist, which is good
-            pass
+            # Column doesn't exist, add it
+            try:
+                db.session.execute(db.text("ALTER TABLE lead_comment ADD COLUMN is_read BOOLEAN DEFAULT 0"))
+                db.session.commit()
+                print("Added is_read column to lead_comment table")
+            except Exception as e:
+                print(f"Could not add is_read column: {e}")
+                pass
         
         print("Database initialized successfully!")
 
@@ -462,8 +464,8 @@ def dashboard():
             }
             products_with_status.append(product_info)
         
-        # Get comments count (all comments for this client)
-        unread_comments = LeadComment.query.filter_by(client_id=user_id).count()
+        # Get unread comments count for this client
+        unread_comments = LeadComment.query.filter_by(client_id=user_id, is_read=False).count()
         
         return render_template('dashboard_client.html', products=products_with_status, unread_comments=unread_comments)
     elif role == 'lead':
@@ -711,8 +713,9 @@ def client_comments():
 def mark_comment_read(comment_id):
     comment = LeadComment.query.get_or_404(comment_id)
     if comment.client_id == session['user_id']:
-        # Comment read functionality can be implemented later if needed
-        pass
+        comment.is_read = True
+        db.session.commit()
+        flash('Comment marked as read.', 'success')
     return redirect(request.referrer or url_for('dashboard'))
 
 @app.route('/client/comment/<int:comment_id>/reply', methods=['POST'])
