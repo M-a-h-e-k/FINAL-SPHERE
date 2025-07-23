@@ -60,6 +60,7 @@ class QuestionnaireResponse(db.Model):
     created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
     is_reviewed = db.Column(db.Boolean, default=False)
     score = db.Column(db.Integer, default=0)
+    needs_client_response = db.Column(db.Boolean, default=False) # Added for rejected responses
 
 class LeadComment(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -431,6 +432,23 @@ def dashboard():
             total_sections = len(SECTION_IDS)
             completed_sections_count = len(completed_sections)
             
+            # Check for rejected questions that need client attention
+            rejected_responses = QuestionnaireResponse.query.filter_by(
+                product_id=product.id, user_id=user_id, needs_client_response=True
+            ).all()
+            rejected_count = len(rejected_responses)
+            
+            # If there are rejected questions, the assessment status should reflect this
+            if rejected_count > 0:
+                status_record.status = 'needs_client_response'
+            elif completed_sections_count == total_sections and not rejected_count:
+                # Check if all questions are reviewed
+                all_reviewed = all(r.is_reviewed for r in responses)
+                if all_reviewed:
+                    status_record.status = 'completed'
+                else:
+                    status_record.status = 'under_review'
+            
             # Find next section to continue
             next_section_idx = 0
             for i, section in enumerate(SECTION_IDS):
@@ -460,7 +478,8 @@ def dashboard():
                 'answered_questions': status_record.questions_completed,
                 'total_questions': status_record.total_questions,
                 'overall_score': round(overall_percentage, 1),
-                'last_updated': status_record.last_updated
+                'last_updated': status_record.last_updated,
+                'rejected_count': rejected_count
             }
             products_with_status.append(product_info)
         
@@ -469,16 +488,20 @@ def dashboard():
         
         return render_template('dashboard_client.html', products=products_with_status, unread_comments=unread_comments)
     elif role == 'lead':
-        # Get all responses with user and product information
+        # Get all responses with user and product information - only for completed assessments
         resps = db.session.query(QuestionnaireResponse, User, Product).join(
             User, QuestionnaireResponse.user_id == User.id
         ).join(
             Product, QuestionnaireResponse.product_id == Product.id
         ).all()
         
-        # Organize responses by client and product
+        # Organize responses by client and product - filter for complete assessments only
         clients_data = {}
         for resp, user, product in resps:
+            # Check if this product's assessment is complete for this user
+            if not is_assessment_complete(product.id, user.id):
+                continue  # Skip incomplete assessments
+                
             if user.id not in clients_data:
                 clients_data[user.id] = {
                     'user': user,
@@ -648,7 +671,9 @@ def fill_questionnaire_section(product_id, section_idx):
                 question=q['question'],
                 answer=answer,
                 comment=comment,
-                evidence_path=evidence_path
+                evidence_path=evidence_path,
+                is_reviewed=False,  # Reset review status for new/updated responses
+                needs_client_response=False  # Reset the client response flag when they respond
             )
             db.session.add(resp)
         db.session.commit()
@@ -797,6 +822,9 @@ def lead_reply_comment(comment_id):
             original_response = QuestionnaireResponse.query.get(parent_comment.response_id)
             if original_response:
                 original_response.is_reviewed = False  # Allow client to modify
+                # For rejected responses, ensure they're marked for client attention
+                if status == 'rejected':
+                    original_response.needs_client_response = True
         
         db.session.commit()
         flash('Reply sent to client successfully.')
@@ -824,7 +852,11 @@ def review_questionnaire(response_id):
         
         # Mark response as reviewed (with safety check)
         try:
-            resp.is_reviewed = True
+            if status == 'rejected':
+                resp.is_reviewed = False  # Allow client to modify rejected responses
+                resp.needs_client_response = True  # Mark for client attention
+            else:
+                resp.is_reviewed = True
         except Exception:
             # If is_reviewed column doesn't exist yet, skip setting it
             pass

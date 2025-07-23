@@ -110,6 +110,8 @@
                                             <i class="bi bi-check"></i>Review Done
                                         {% elif product.status == 'completed' %}
                                             <i class="bi bi-check-circle"></i>Completed
+                                        {% elif product.status == 'needs_client_response' %}
+                                            <i class="bi bi-exclamation-triangle"></i>Needs Response
                                         {% else %}
                                             <i class="bi bi-circle"></i>{{ product.status_display }}
                                         {% endif %}
@@ -152,12 +154,23 @@
                                         <small class="text-muted">{{ product.overall_score }}% Score</small>
                                     </div>
                                     <div class="col-3">
-                                        <div class="{% if product.status == 'completed' %}text-success{% elif product.status == 'questions_done' %}text-warning{% elif product.status == 'under_review' %}text-info{% else %}text-primary{% endif %}">
-                                            <i class="bi bi-{% if product.status == 'completed' %}check-circle{% elif product.status == 'questions_done' %}clock{% elif product.status == 'under_review' %}eye{% else %}pencil{% endif %} fs-5"></i>
+                                        <div class="{% if product.status == 'completed' %}text-success{% elif product.status == 'questions_done' %}text-warning{% elif product.status == 'under_review' %}text-info{% elif product.status == 'needs_client_response' %}text-danger{% else %}text-primary{% endif %}">
+                                            <i class="bi bi-{% if product.status == 'completed' %}check-circle{% elif product.status == 'questions_done' %}clock{% elif product.status == 'under_review' %}eye{% elif product.status == 'needs_client_response' %}exclamation-triangle{% else %}pencil{% endif %} fs-5"></i>
                                         </div>
                                         <small class="text-muted">{{ product.status_display }}</small>
                                     </div>
                                 </div>
+                                
+                                {% if product.rejected_count > 0 %}
+                                <!-- Rejected Questions Alert -->
+                                <div class="alert alert-danger mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <i class="bi bi-exclamation-triangle me-2"></i>
+                                        <strong>{{ product.rejected_count }} question{{ 's' if product.rejected_count != 1 else '' }} need{{ '' if product.rejected_count != 1 else 's' }} your attention</strong>
+                                    </div>
+                                    <small class="text-muted">Reviewer has rejected some responses and requires re-submission.</small>
+                                </div>
+                                {% endif %}
                                 
                                 <!-- Action Buttons -->
                                 <div class="d-grid gap-2">
@@ -178,6 +191,11 @@
                                         <button class="btn btn-info rounded-pill" disabled>
                                             <i class="bi bi-eye me-2"></i>Under Review
                                         </button>
+                                    {% elif product.status == 'needs_client_response' %}
+                                        <a href="{{ url_for('client_comments') }}" 
+                                           class="btn btn-danger rounded-pill">
+                                            <i class="bi bi-exclamation-triangle me-2"></i>Review Feedback
+                                        </a>
                                     {% elif product.status == 'review_done' %}
                                         <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}" 
                                            class="btn btn-gradient-primary rounded-pill">
