@@ -80,6 +80,12 @@ class Product(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
+    product_url = db.Column(db.String(500), nullable=False)
+    programming_language = db.Column(db.String(100), nullable=False)
+    cloud_platform = db.Column(db.String(100), nullable=False)
+    cloud_platform_other = db.Column(db.String(200))
+    cicd_platform = db.Column(db.String(100), nullable=False)
+    additional_details = db.Column(db.Text)
     owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
@@ -162,6 +168,7 @@ class LeadComment(db.Model):
     parent_comment = db.relationship('LeadComment', remote_side=[id], backref='replies')
     lead = db.relationship('User', foreign_keys=[lead_id], backref='lead_comments_made')
     client = db.relationship('User', foreign_keys=[client_id], backref='lead_comments_received')
+    product = db.relationship('Product', backref='lead_comments')
     
     # Indexes for better performance
     __table_args__ = (
@@ -912,10 +919,31 @@ def is_assessment_complete(product_id, user_id):
 def add_product():
     if request.method == 'POST':
         name = request.form['name']
-        if not name:
-            flash('Product name required.')
+        product_url = request.form['product_url']
+        programming_language = request.form['programming_language']
+        cloud_platform = request.form['cloud_platform']
+        cloud_platform_other = request.form.get('cloud_platform_other', '')
+        cicd_platform = request.form['cicd_platform']
+        additional_details = request.form.get('additional_details', '')
+        
+        if not name or not product_url or not programming_language or not cloud_platform or not cicd_platform:
+            flash('Please fill in all required fields.')
             return redirect(url_for('add_product'))
-        product = Product(name=name, owner_id=session['user_id'])
+        
+        # If cloud_platform is "Other", use the custom value
+        if cloud_platform == 'Other' and cloud_platform_other:
+            cloud_platform = cloud_platform_other
+            
+        product = Product(
+            name=name, 
+            product_url=product_url,
+            programming_language=programming_language,
+            cloud_platform=cloud_platform,
+            cloud_platform_other=cloud_platform_other,
+            cicd_platform=cicd_platform,
+            additional_details=additional_details,
+            owner_id=session['user_id']
+        )
         db.session.add(product)
         db.session.commit()
         flash('Product added. Now fill the questionnaire.')
