@@ -560,6 +560,10 @@ body {
     border: 2px solid transparent;
 }
 
+.question-number .number-text {
+    display: none;
+}
+
 
 
 .answer-options {

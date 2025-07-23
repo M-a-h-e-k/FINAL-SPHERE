@@ -900,7 +900,7 @@ def dashboard():
         ).join(
             Product, QuestionnaireResponse.product_id == Product.id
         ).order_by(QuestionnaireResponse.created_at.desc()).limit(100).all()
-        all_comments = LeadComment.query.order_by(LeadComment.created_at.desc()).limit(50).all()
+        all_comments = LeadComment.query.options(db.joinedload(LeadComment.product), db.joinedload(LeadComment.lead), db.joinedload(LeadComment.client)).order_by(LeadComment.created_at.desc()).limit(50).all()
         
         return render_template('dashboard_superuser.html', products_data=products_data, all_responses=all_responses, all_comments=all_comments)
     return redirect(url_for('index'))
@@ -1082,13 +1082,13 @@ def fill_questionnaire_section(product_id, section_idx):
 def product_results(product_id):
     resps = QuestionnaireResponse.query.filter_by(product_id=product_id, user_id=session['user_id']).all()
     # Get lead comments for this product
-    lead_comments = LeadComment.query.filter_by(product_id=product_id, client_id=session['user_id']).order_by(LeadComment.created_at.desc()).all()
+    lead_comments = LeadComment.query.options(db.joinedload(LeadComment.product), db.joinedload(LeadComment.lead)).filter_by(product_id=product_id, client_id=session['user_id']).order_by(LeadComment.created_at.desc()).all()
     return render_template('product_results.html', responses=resps, lead_comments=lead_comments)
 
 @app.route('/client/comments')
 @login_required('client')
 def client_comments():
-    comments = LeadComment.query.filter_by(client_id=session['user_id']).order_by(LeadComment.created_at.desc()).all()
+    comments = LeadComment.query.options(db.joinedload(LeadComment.product), db.joinedload(LeadComment.lead)).filter_by(client_id=session['user_id']).order_by(LeadComment.created_at.desc()).all()
     return render_template('client_comments.html', comments=comments)
 
 @app.route('/client/comment/<int:comment_id>/read')
