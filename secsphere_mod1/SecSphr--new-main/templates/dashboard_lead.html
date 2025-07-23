@@ -56,6 +56,25 @@
     </div>
 </div>
 
+<!-- Action Buttons -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card dashboard-card">
+            <div class="card-body text-center">
+                <h5 class="card-title mb-3">
+                    <i class="bi bi-tools me-2"></i>Quick Actions
+                </h5>
+                <a href="{{ url_for('lead_comments') }}" class="btn btn-outline-info btn-lg rounded-pill px-4 me-3">
+                    <i class="bi bi-chat-left-text me-2"></i>Client Communications
+                </a>
+                <button class="btn btn-outline-primary btn-lg rounded-pill px-4" onclick="showHelpModal()">
+                    <i class="bi bi-question-circle me-2"></i>Need Help?
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Filter and Search -->
 <div class="row mb-4">
     <div class="col-12">
@@ -191,11 +210,9 @@
                                                         <thead class="table-light">
                                                             <tr>
                                                                 <th width="5%">#</th>
-                                                                <th width="40%">Question</th>
-                                                                <th width="15%">Answer</th>
-                                                                <th width="15%">Status</th>
-                                                                <th width="10%">Evidence</th>
-                                                                <th width="15%">Actions</th>
+                                                                <th width="55%">Question</th>
+                                                                <th width="20%">Status</th>
+                                                                <th width="20%">Actions</th>
                                                             </tr>
                                                         </thead>
                                                         <tbody>
@@ -205,15 +222,24 @@
                                                                     <span class="question-number-clean">{{ loop.index }}</span>
                                                                 </td>
                                                                 <td>
-                                                                    <p class="mb-1 fw-medium">{{ resp.question[:80] }}{% if resp.question|length > 80 %}...{% endif %}</p>
-                                                                                                                    {% if resp.client_comment %}
-                                                    <small class="text-muted">
-                                                        <i class="bi bi-chat-dots me-1"></i>{{ resp.client_comment[:50] }}{% if resp.client_comment|length > 50 %}...{% endif %}
-                                                    </small>
-                                                {% endif %}
-                                                                </td>
-                                                                <td>
-                                                                    <span class="badge bg-success">{{ resp.answer }}</span>
+                                                                    <p class="mb-1 fw-medium">{{ resp.question[:100] }}{% if resp.question|length > 100 %}...{% endif %}</p>
+                                                                    {% if resp.client_comment %}
+                                                                        <small class="text-muted">
+                                                                            <i class="bi bi-chat-dots me-1"></i>{{ resp.client_comment[:70] }}{% if resp.client_comment|length > 70 %}...{% endif %}
+                                                                        </small>
+                                                                    {% endif %}
+                                                                    <div class="mt-1">
+                                                                        <small class="text-info">
+                                                                            <i class="bi bi-check-circle me-1"></i>{{ resp.answer }}
+                                                                        </small>
+                                                                        {% if resp.evidence_path %}
+                                                                            <a href="/{{ resp.evidence_path }}" target="_blank"
+                                                                               class="btn btn-outline-info btn-sm ms-2"
+                                                                               title="View Evidence">
+                                                                                <i class="bi bi-paperclip"></i>
+                                                                            </a>
+                                                                        {% endif %}
+                                                                    </div>
                                                                 </td>
                                                                 <td>
                                                                     {% set lead_comment = resp.lead_comments|first %}
@@ -235,17 +261,6 @@
                                                                         {% endif %}
                                                                     {% else %}
                                                                         <span class="badge bg-secondary">Pending</span>
-                                                                    {% endif %}
-                                                                </td>
-                                                                <td>
-                                                                    {% if resp.evidence_path %}
-                                                                        <a href="/{{ resp.evidence_path }}" target="_blank"
-                                                                           class="btn btn-outline-info btn-sm"
-                                                                           title="View Evidence">
-                                                                            <i class="bi bi-paperclip"></i>
-                                                                        </a>
-                                                                    {% else %}
-                                                                        <span class="text-muted">-</span>
                                                                     {% endif %}
                                                                 </td>
                                                                 <td>
@@ -348,6 +363,56 @@ document.addEventListener('DOMContentLoaded', function() {
         }, index * 200);
     });
 });
+
+function showHelpModal() {
+    // Create a simple help modal using Bootstrap
+    const helpContent = `
+        <div class="modal fade" id="helpModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="bi bi-question-circle me-2"></i>Lead Dashboard Help
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6><i class="bi bi-clipboard-check me-2"></i>Reviewing Responses</h6>
+                                <p>Click "Review" to evaluate client questionnaire responses and provide feedback.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="bi bi-chat-left-text me-2"></i>Communications</h6>
+                                <p>Use "Client Communications" to view and respond to client messages and feedback.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="bi bi-search me-2"></i>Filtering</h6>
+                                <p>Use the search and filter options to quickly find specific client responses.</p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6><i class="bi bi-shield-check me-2"></i>Review Status</h6>
+                                <p>Track the status of each response: Pending, Approved, Needs Revision, or Rejected.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    
+    // Remove existing modal if present
+    const existingModal = document.getElementById('helpModal');
+    if (existingModal) {
+        existingModal.remove();
+    }
+    
+    // Add modal to body
+    document.body.insertAdjacentHTML('beforeend', helpContent);
+    
+    // Show modal
+    new bootstrap.Modal(document.getElementById('helpModal')).show();
+}
 </script>
 </div>
 {% endblock %}

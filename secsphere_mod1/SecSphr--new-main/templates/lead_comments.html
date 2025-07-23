@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+
+{% block title %}Client Communications - SecureSphere{% endblock %}
+
+{% block content %}
+<div class="chat-container">
+    <!-- Chat Header -->
+    <div class="chat-header">
+        <div class="d-flex align-items-center">
+            <div class="chat-avatar">
+                <i class="bi bi-people-fill"></i>
+            </div>
+            <div class="ms-3">
+                <h5 class="mb-0">Client Communications</h5>
+                <small class="text-light opacity-75">Review communications and client responses</small>
+            </div>
+        </div>
+        <div class="chat-actions">
+            <span class="badge bg-light text-dark">{{ comments|length }} conversations</span>
+        </div>
+    </div>
+
+    <!-- Chat Messages -->
+    <div class="chat-messages" id="chatMessages">
+        {% if comments %}
+            {% for comment in comments %}
+                <!-- Group messages by conversation -->
+                <div class="message-group mb-4">
+                    <!-- Product Context Card -->
+                    <div class="product-context-card">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-box-seam text-primary me-2"></i>
+                            <strong>{{ comment.product.name }}</strong>
+                            {% if comment.response %}
+                                <span class="ms-2 text-muted">• Question #{{ loop.index }}</span>
+                            {% endif %}
+                            <span class="ms-auto text-muted">
+                                <i class="bi bi-person-circle me-1"></i>{{ comment.client.username }}
+                            </span>
+                        </div>
+                        {% if comment.response %}
+                            <div class="question-preview">
+                                <small class="text-muted">{{ comment.response.question[:100] }}{% if comment.response.question|length > 100 %}...{% endif %}</small>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Lead Message (Original Review) -->
+                    {% if comment.status != 'client_reply' and comment.status != 'lead_reply' %}
+                    <div class="message lead-message">
+                        <div class="message-content">
+                            <div class="message-header">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-badge text-primary me-2"></i>
+                                    <strong>You</strong>
+                                    <span class="message-time ms-auto">{{ comment.created_at.strftime('%m/%d/%Y %I:%M %p') }}</span>
+                                </div>
+                                <div class="message-status">
+                                    <span class="status-badge status-{{ comment.status }}">
+                                        {% if comment.status == 'approved' %}
+                                            <i class="bi bi-check-circle"></i> Approved
+                                        {% elif comment.status == 'needs_revision' %}
+                                            <i class="bi bi-exclamation-triangle"></i> Needs Revision
+                                        {% elif comment.status == 'rejected' %}
+                                            <i class="bi bi-x-circle"></i> Rejected
+                                        {% else %}
+                                            <i class="bi bi-clock"></i> Pending
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="message-text">
+                                {{ comment.comment }}
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
+                    <!-- Client Replies -->
+                    {% set client_replies = comments|selectattr('parent_comment_id', 'equalto', comment.id)|list %}
+                    {% for reply in client_replies %}
+                        {% if reply.status == 'client_reply' %}
+                            <div class="message client-message">
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-person-circle text-success me-2"></i>
+                                            <strong>{{ reply.client.username }}</strong>
+                                            <span class="message-time ms-auto">{{ reply.created_at.strftime('%m/%d/%Y %I:%M %p') }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="message-text">
+                                        {{ reply.comment }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% elif reply.status == 'lead_reply' %}
+                            <div class="message lead-message">
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-person-badge text-primary me-2"></i>
+                                            <strong>You</strong>
+                                            <span class="message-time ms-auto">{{ reply.created_at.strftime('%m/%d/%Y %I:%M %p') }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="message-text">
+                                        {{ reply.comment }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- Reply Form (only show for conversations that need responses) -->
+                    {% if comment.status in ['needs_revision', 'rejected'] or client_replies|selectattr('status', 'equalto', 'client_reply')|list %}
+                    <div class="reply-form" id="replyForm{{ comment.id }}">
+                        <form method="post" action="{{ url_for('lead_reply_comment', comment_id=comment.id) }}">
+                            <div class="message-compose">
+                                <div class="compose-input">
+                                    <textarea class="form-control" name="reply" rows="3"
+                                              placeholder="Type your reply to {{ comment.client.username }}..." required></textarea>
+                                </div>
+                                <div class="compose-actions mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-send"></i> Send Reply
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary"
+                                            onclick="toggleReplyForm({{ comment.id }})">
+                                        <i class="bi bi-eye-slash"></i> Hide
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% else %}
+                    <div class="reply-form" id="replyForm{{ comment.id }}" style="display: none;">
+                        <form method="post" action="{{ url_for('lead_reply_comment', comment_id=comment.id) }}">
+                            <div class="message-compose">
+                                <div class="compose-input">
+                                    <textarea class="form-control" name="reply" rows="3"
+                                              placeholder="Type your reply to {{ comment.client.username }}..." required></textarea>
+                                </div>
+                                <div class="compose-actions mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-send"></i> Send Reply
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary"
+                                            onclick="toggleReplyForm({{ comment.id }})">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                    {% endif %}
+
+                    <!-- Show Reply Button for closed conversations -->
+                    {% if not (comment.status in ['needs_revision', 'rejected'] or client_replies|selectattr('status', 'equalto', 'client_reply')|list) %}
+                    <div class="text-center mt-2">
+                        <button class="btn btn-sm btn-outline-primary"
+                                onclick="toggleReplyForm({{ comment.id }})">
+                            <i class="bi bi-reply"></i> Reply to {{ comment.client.username }}
+                        </button>
+                    </div>
+                    {% endif %}
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-chat">
+                <div class="text-center py-5">
+                    <i class="bi bi-chat-dots display-1 text-muted mb-3"></i>
+                    <h5 class="text-muted">No Communications Yet</h5>
+                    <p class="text-muted">Client communications will appear here when they respond to your reviews.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function toggleReplyForm(commentId) {
+    const form = document.getElementById('replyForm' + commentId);
+    if (form.style.display === 'none' || form.style.display === '') {
+        form.style.display = 'block';
+        form.scrollIntoView({ behavior: 'smooth' });
+        // Focus on textarea
+        const textarea = form.querySelector('textarea');
+        if (textarea) {
+            textarea.focus();
+        }
+    } else {
+        form.style.display = 'none';
+    }
+}
+
+// Auto-scroll to bottom on load
+document.addEventListener('DOMContentLoaded', function() {
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+});
+</script>
+{% endblock %}

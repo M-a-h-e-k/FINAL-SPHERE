@@ -442,10 +442,12 @@ document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
         questionCard.classList.add('border-success');
         questionCard.classList.remove('border-danger');
 
-        // Add checkmark to question number
+        // Add checkmark next to question number but keep the circle intact
         const questionNumber = questionCard.querySelector('.question-number');
         if (questionNumber && !questionNumber.querySelector('.bi-check-circle')) {
-            questionNumber.innerHTML += ' <i class="bi bi-check-circle text-success ms-1"></i>';
+            const checkmark = document.createElement('i');
+            checkmark.className = 'bi bi-check-circle text-success ms-2';
+            questionNumber.appendChild(checkmark);
         }
     });
 });
