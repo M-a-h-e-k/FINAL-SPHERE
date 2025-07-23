@@ -132,6 +132,20 @@
                     </div>
                     <div class="col-md-3 mb-3">
                         <div class="d-grid">
+                            <a href="{{ url_for('manage_users') }}" class="btn btn-outline-primary rounded-pill">
+                                <i class="bi bi-people me-2"></i>User Management
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="d-grid">
+                            <a href="{{ url_for('invite_user') }}" class="btn btn-outline-info rounded-pill">
+                                <i class="bi bi-person-plus me-2"></i>Invite Users
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="d-grid">
                             <button class="btn btn-outline-primary rounded-pill" onclick="showSystemStatsModal()">
                                 <i class="bi bi-speedometer2 me-2"></i>System Stats
                             </button>

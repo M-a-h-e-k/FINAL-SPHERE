@@ -4,13 +4,21 @@
 
 {% block content %}
 <div class="container my-4">
+    <!-- Page Header -->
+    <div class="dashboard-header text-center mb-3">
+        <h1 class="display-6 fw-bold mb-2" style="color: #1e40af;">
+            <i class="bi bi-person-plus me-2"></i>Invite New User
+        </h1>
+        <p class="lead mb-0" style="color: #64748b; font-size: 1rem;">Send invitations to clients and lead reviewers</p>
+    </div>
+    
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">
-                        <i class="bi bi-person-plus me-2"></i>Invite New User
-                    </h4>
+                <div class="card-header bg-gradient-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-envelope me-2"></i>User Invitation Form
+                    </h5>
                 </div>
                 <div class="card-body">
                     <form method="post">
@@ -41,16 +49,23 @@
                         
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-2"></i>
-                            <strong>How it works:</strong>
+                            <strong>Email Invitation Process:</strong>
                             <ul class="mb-0 mt-2">
-                                <li><strong>For Clients:</strong> An invitation link will be generated that allows the client to register with their own credentials</li>
-                                <li><strong>For Leads:</strong> Use the "Create Lead" section below to directly create lead accounts with credentials</li>
+                                <li><strong>Automatic Email:</strong> An invitation email will be sent to the specified email address</li>
+                                <li><strong>Secure Registration:</strong> The email contains a secure registration link that expires in 7 days</li>
+                                <li><strong>User Registration:</strong> Recipients can create their own username and password</li>
+                                <li><strong>Role Assignment:</strong> Users will be automatically assigned the selected role</li>
                             </ul>
                         </div>
                         
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            <strong>Email Configuration:</strong> Ensure email settings are configured in environment variables for automatic email delivery. If not configured, a registration link will be provided manually.
+                        </div>
+                        
                         <div class="d-grid">
-                            <button type="submit" class="btn btn-primary">
-                                <i class="bi bi-envelope me-2"></i>Generate Invitation Link
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-envelope me-2"></i>Send Invitation Email
                             </button>
                         </div>
                     </form>

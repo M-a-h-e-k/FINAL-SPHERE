@@ -2,6 +2,7 @@ import os
 import csv
 from flask import Flask, render_template, redirect, url_for, request, flash, session, jsonify
 from flask_sqlalchemy import SQLAlchemy
+from flask_mail import Mail, Message
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from functools import wraps
@@ -26,11 +27,21 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 app.config['UPLOAD_FOLDER'] = os.path.join(basedir, 'static', 'uploads')
 ALLOWED_EXTENSIONS = {'csv', 'txt', 'pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xlsx', 'zip'}
 
+# Email Configuration
+app.config['MAIL_SERVER'] = os.environ.get('MAIL_SERVER', 'smtp.gmail.com')
+app.config['MAIL_PORT'] = int(os.environ.get('MAIL_PORT', 587))
+app.config['MAIL_USE_TLS'] = os.environ.get('MAIL_USE_TLS', 'True').lower() == 'true'
+app.config['MAIL_USE_SSL'] = os.environ.get('MAIL_USE_SSL', 'False').lower() == 'true'
+app.config['MAIL_USERNAME'] = os.environ.get('MAIL_USERNAME')
+app.config['MAIL_PASSWORD'] = os.environ.get('MAIL_PASSWORD')
+app.config['MAIL_DEFAULT_SENDER'] = os.environ.get('MAIL_DEFAULT_SENDER', 'noreply@securesphere.com')
+
 # Ensure instance and upload directories exist
 os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
 os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
+mail = Mail(app)
 
 # ==================== DATABASE MODELS ====================
 
@@ -212,13 +223,107 @@ class InvitationToken(db.Model):
     inviter = db.relationship('User', backref='sent_invitations')
     
     def is_expired(self):
-        return datetime.now(timezone.utc) > self.expires_at
+        # Ensure both datetimes are timezone-aware for comparison
+        now = datetime.now(timezone.utc)
+        expires_at = self.expires_at
+        
+        # If expires_at is naive, make it timezone-aware (assume UTC)
+        if expires_at.tzinfo is None:
+            expires_at = expires_at.replace(tzinfo=timezone.utc)
+        
+        return now > expires_at
     
     def __repr__(self):
         return f'<InvitationToken {self.email}: {self.role}>'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+def send_invitation_email(email, role, invitation_link, inviter_name):
+    """Send invitation email to new user"""
+    try:
+        subject = f"Invitation to join SecureSphere as {role.title()}"
+        
+        html_body = f"""
+        <html>
+        <head>
+            <style>
+                body {{ font-family: 'Inter', Arial, sans-serif; line-height: 1.6; color: #333; }}
+                .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                .header {{ background: linear-gradient(135deg, #1e40af 0%, #3b82f6 50%, #60a5fa 100%); color: white; padding: 30px; text-align: center; border-radius: 8px 8px 0 0; }}
+                .content {{ background: #f8fafc; padding: 30px; border-radius: 0 0 8px 8px; }}
+                .btn {{ display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; }}
+                .btn:hover {{ background: #1e40af; }}
+                .footer {{ margin-top: 20px; padding-top: 20px; border-top: 1px solid #e5e7eb; font-size: 14px; color: #6b7280; }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="header">
+                    <h1>🛡️ SecureSphere</h1>
+                    <h2>You're Invited!</h2>
+                </div>
+                <div class="content">
+                    <p>Hello,</p>
+                    <p><strong>{inviter_name}</strong> has invited you to join <strong>SecureSphere</strong> as a <strong>{role.title()}</strong>.</p>
+                    <p>SecureSphere is a comprehensive security assessment platform that helps organizations evaluate and improve their security posture.</p>
+                    
+                    <div style="text-align: center; margin: 30px 0;">
+                        <a href="{invitation_link}" class="btn">Accept Invitation & Register</a>
+                    </div>
+                    
+                    <p><strong>What happens next?</strong></p>
+                    <ul>
+                        <li>Click the button above to access the registration page</li>
+                        <li>Create your account with your preferred username and password</li>
+                        <li>Start using SecureSphere immediately</li>
+                    </ul>
+                    
+                    <p><strong>Note:</strong> This invitation link will expire in 7 days for security purposes.</p>
+                    
+                    <div class="footer">
+                        <p>If you're having trouble with the button above, copy and paste this link into your browser:</p>
+                        <p><a href="{invitation_link}">{invitation_link}</a></p>
+                        <p>This invitation was sent to {email}. If you didn't expect this invitation, you can safely ignore this email.</p>
+                    </div>
+                </div>
+            </div>
+        </body>
+        </html>
+        """
+        
+        text_body = f"""
+        SecureSphere Invitation
+        
+        Hello,
+        
+        {inviter_name} has invited you to join SecureSphere as a {role.title()}.
+        
+        To accept this invitation and create your account, please visit:
+        {invitation_link}
+        
+        This invitation link will expire in 7 days.
+        
+        If you didn't expect this invitation, you can safely ignore this email.
+        
+        Best regards,
+        The SecureSphere Team
+        """
+        
+        msg = Message(
+            subject=subject,
+            sender=app.config['MAIL_DEFAULT_SENDER'],
+            recipients=[email],
+            body=text_body,
+            html=html_body
+        )
+        
+        mail.send(msg)
+        return True
+        
+    except Exception as e:
+        print(f"Failed to send email: {str(e)}")
+        return False
 
 def load_questionnaire():
     sections = {}
@@ -1340,7 +1445,18 @@ def invite_user():
         # Generate invitation link
         invitation_link = url_for('register', token=token, _external=True)
         
-        flash(f'Invitation sent! Registration link: {invitation_link}')
+        # Get inviter's name
+        inviter = User.query.get(session['user_id'])
+        inviter_name = f"{inviter.first_name} {inviter.last_name}".strip() or inviter.username
+        
+        # Try to send email invitation
+        email_sent = send_invitation_email(email, role, invitation_link, inviter_name)
+        
+        if email_sent:
+            flash(f'Invitation email sent successfully to {email}! They will receive a registration link via email.', 'success')
+        else:
+            flash(f'Invitation created but email could not be sent. Registration link: {invitation_link}', 'warning')
+        
         return redirect(url_for('invite_user'))
     
     return render_template('admin_invite_user.html')
