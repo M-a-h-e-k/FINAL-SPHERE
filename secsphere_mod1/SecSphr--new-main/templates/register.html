@@ -22,19 +22,19 @@
                 <div class="card-body">
                     <form method="post">
                         <div class="form-floating mb-3">
-                            <input class="form-control" id="inputUsername" name="username" type="text" 
+                            <input class="form-control" id="inputUsername" name="username" type="text"
                                    placeholder="Enter your username" required />
                             <label for="inputUsername">Username</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input class="form-control" id="inputEmail" name="email" type="email" 
-                                   placeholder="name@example.com" 
-                                   value="{{ invitation.email if invitation else '' }}" 
+                            <input class="form-control" id="inputEmail" name="email" type="email"
+                                   placeholder="name@example.com"
+                                   value="{{ invitation.email if invitation else '' }}"
                                    {% if invitation %}readonly{% endif %} required />
                             <label for="inputEmail">Email address</label>
                         </div>
                         <div class="form-floating mb-3">
-                            <input class="form-control" id="inputPassword" name="password" type="password" 
+                            <input class="form-control" id="inputPassword" name="password" type="password"
                                    placeholder="Password" required />
                             <label for="inputPassword">Password</label>
                             <div class="form-text">
@@ -43,8 +43,8 @@
                         </div>
                         {% if invitation and invitation.role == 'client' %}
                         <div class="form-floating mb-3">
-                            <input class="form-control" id="inputOrganization" name="organization" type="text" 
-                                   placeholder="Organization Name" 
+                            <input class="form-control" id="inputOrganization" name="organization" type="text"
+                                   placeholder="Organization Name"
                                    value="{{ invitation.organization if invitation.organization else '' }}" />
                             <label for="inputOrganization">Organization Name</label>
                         </div>

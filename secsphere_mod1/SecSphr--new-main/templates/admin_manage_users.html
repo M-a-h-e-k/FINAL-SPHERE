@@ -5,7 +5,7 @@
 {% block content %}
 <div class="container my-4">
     <div class="dashboard-header text-center">
-        <h1 class="display-5 fw-bold" style="color: #1e40af; font-size: 2.5rem;">
+        <h1 class="display-5 fw-bold">
             <i class="bi bi-people me-3"></i>User Management
         </h1>
         <p class="lead mb-0">Manage users and invitations</p>
@@ -65,11 +65,11 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <button class="btn btn-outline-info btn-sm me-1" 
+                                <button class="btn btn-outline-info btn-sm me-1"
                                         onclick="copyInvitationLink('{{ url_for('register', token=invitation.token, _external=True) }}')">
                                     <i class="bi bi-copy"></i>
                                 </button>
-                                <a href="{{ url_for('revoke_invitation', invitation_id=invitation.id) }}" 
+                                <a href="{{ url_for('revoke_invitation', invitation_id=invitation.id) }}"
                                    class="btn btn-outline-danger btn-sm"
                                    onclick="return confirm('Are you sure you want to revoke this invitation?')">
                                     <i class="bi bi-trash"></i>
@@ -174,14 +174,14 @@ function copyToClipboard() {
     copyText.select();
     copyText.setSelectionRange(0, 99999);
     navigator.clipboard.writeText(copyText.value);
-    
+
     // Show feedback
     var button = event.target.closest('button');
     var originalText = button.innerHTML;
     button.innerHTML = '<i class="bi bi-check"></i> Copied!';
     button.classList.remove('btn-outline-secondary');
     button.classList.add('btn-success');
-    
+
     setTimeout(function() {
         button.innerHTML = originalText;
         button.classList.remove('btn-success');

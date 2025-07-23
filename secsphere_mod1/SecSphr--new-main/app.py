@@ -47,7 +47,7 @@ mail = Mail(app)
 
 class User(db.Model):
     __tablename__ = 'users'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), nullable=False, index=True)
@@ -60,23 +60,23 @@ class User(db.Model):
     is_active = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     last_login = db.Column(db.DateTime)
-    
+
     # Relationships
     products = db.relationship('Product', backref='owner', lazy=True, cascade='all, delete-orphan')
     responses = db.relationship('QuestionnaireResponse', backref='user', lazy=True)
-    
+
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
-    
+
     def check_password(self, password):
         return check_password_hash(self.password_hash, password)
-    
+
     def __repr__(self):
         return f'<User {self.username}>'
 
 class Product(db.Model):
     __tablename__ = 'products'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(200), nullable=False)
     description = db.Column(db.Text)
@@ -90,18 +90,18 @@ class Product(db.Model):
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     is_active = db.Column(db.Boolean, default=True)
-    
+
     # Relationships
     responses = db.relationship('QuestionnaireResponse', backref='product', lazy=True, cascade='all, delete-orphan')
     statuses = db.relationship('ProductStatus', backref='product', lazy=True, cascade='all, delete-orphan')
     scores = db.relationship('ScoreHistory', backref='product', lazy=True, cascade='all, delete-orphan')
-    
+
     def __repr__(self):
         return f'<Product {self.name}>'
 
 class ProductStatus(db.Model):
     __tablename__ = 'product_statuses'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -110,16 +110,16 @@ class ProductStatus(db.Model):
     total_questions = db.Column(db.Integer, default=0)
     completion_percentage = db.Column(db.Float, default=0.0)
     last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
+
     # Composite index for better performance
     __table_args__ = (db.Index('idx_product_user', 'product_id', 'user_id'),)
-    
+
     def __repr__(self):
         return f'<ProductStatus {self.product_id}-{self.user_id}: {self.status}>'
 
 class QuestionnaireResponse(db.Model):
     __tablename__ = 'questionnaire_responses'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
@@ -135,23 +135,23 @@ class QuestionnaireResponse(db.Model):
     needs_client_response = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
+
     # Relationships
     lead_comments = db.relationship('LeadComment', backref='response', lazy=True, cascade='all, delete-orphan')
-    
+
     # Composite indexes for better performance
     __table_args__ = (
         db.Index('idx_user_product', 'user_id', 'product_id'),
         db.Index('idx_section', 'section'),
         db.Index('idx_needs_response', 'needs_client_response'),
     )
-    
+
     def __repr__(self):
         return f'<Response {self.id}: {self.section}>'
 
 class LeadComment(db.Model):
     __tablename__ = 'lead_comments'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     response_id = db.Column(db.Integer, db.ForeignKey('questionnaire_responses.id'))
     lead_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -163,25 +163,25 @@ class LeadComment(db.Model):
     is_read = db.Column(db.Boolean, default=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
+
     # Relationships
     parent_comment = db.relationship('LeadComment', remote_side=[id], backref='replies')
     lead = db.relationship('User', foreign_keys=[lead_id], backref='lead_comments_made')
     client = db.relationship('User', foreign_keys=[client_id], backref='lead_comments_received')
     product = db.relationship('Product', backref='lead_comments')
-    
+
     # Indexes for better performance
     __table_args__ = (
         db.Index('idx_client_read', 'client_id', 'is_read'),
         db.Index('idx_status', 'status'),
     )
-    
+
     def __repr__(self):
         return f'<LeadComment {self.id}: {self.status}>'
 
 class ScoreHistory(db.Model):
     __tablename__ = 'score_history'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
@@ -192,29 +192,29 @@ class ScoreHistory(db.Model):
     questions_answered = db.Column(db.Integer, default=0)
     questions_total = db.Column(db.Integer, default=0)
     calculated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    
+
     # Composite index for better performance
     __table_args__ = (db.Index('idx_product_user_section', 'product_id', 'user_id', 'section_name'),)
-    
+
     def __repr__(self):
         return f'<ScoreHistory {self.product_id}-{self.section_name}: {self.percentage}%>'
 
 class SystemSettings(db.Model):
     __tablename__ = 'system_settings'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     key = db.Column(db.String(100), unique=True, nullable=False)
     value = db.Column(db.Text)
     description = db.Column(db.Text)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
-    
+
     def __repr__(self):
         return f'<SystemSettings {self.key}: {self.value}>'
 
 class InvitationToken(db.Model):
     __tablename__ = 'invitation_tokens'
-    
+
     id = db.Column(db.Integer, primary_key=True)
     token = db.Column(db.String(100), unique=True, nullable=False, index=True)
     email = db.Column(db.String(120), nullable=False, index=True)
@@ -225,34 +225,34 @@ class InvitationToken(db.Model):
     expires_at = db.Column(db.DateTime, nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     used_at = db.Column(db.DateTime)
-    
+
     # Relationships
     inviter = db.relationship('User', backref='sent_invitations')
-    
+
     def is_expired(self):
         # Ensure both datetimes are timezone-aware for comparison
         now = datetime.now(timezone.utc)
         expires_at = self.expires_at
-        
+
         # Handle timezone conversion more robustly
         if expires_at is None:
             return True  # If no expiration date, consider it expired
-            
+
         # If expires_at is naive, make it timezone-aware (assume UTC)
         if expires_at.tzinfo is None or expires_at.tzinfo.utcoffset(expires_at) is None:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
-        
+
         # Convert both to UTC for comparison
         if now.tzinfo is None:
             now = now.replace(tzinfo=timezone.utc)
         else:
             now = now.astimezone(timezone.utc)
-            
+
         if expires_at.tzinfo != timezone.utc:
             expires_at = expires_at.astimezone(timezone.utc)
-        
+
         return now > expires_at
-    
+
     def __repr__(self):
         return f'<InvitationToken {self.email}: {self.role}>'
 
@@ -263,7 +263,7 @@ def send_invitation_email(email, role, invitation_link, inviter_name):
     """Send invitation email to new user"""
     try:
         subject = f"Invitation to join SecureSphere as {role.title()}"
-        
+
         html_body = f"""
         <html>
         <head>
@@ -287,20 +287,20 @@ def send_invitation_email(email, role, invitation_link, inviter_name):
                     <p>Hello,</p>
                     <p><strong>{inviter_name}</strong> has invited you to join <strong>SecureSphere</strong> as a <strong>{role.title()}</strong>.</p>
                     <p>SecureSphere is a comprehensive security assessment platform that helps organizations evaluate and improve their security posture.</p>
-                    
+
                     <div style="text-align: center; margin: 30px 0;">
                         <a href="{invitation_link}" class="btn">Accept Invitation & Register</a>
                     </div>
-                    
+
                     <p><strong>What happens next?</strong></p>
                     <ul>
                         <li>Click the button above to access the registration page</li>
                         <li>Create your account with your preferred username and password</li>
                         <li>Start using SecureSphere immediately</li>
                     </ul>
-                    
+
                     <p><strong>Note:</strong> This invitation link will expire in 7 days for security purposes.</p>
-                    
+
                     <div class="footer">
                         <p>If you're having trouble with the button above, copy and paste this link into your browser:</p>
                         <p><a href="{invitation_link}">{invitation_link}</a></p>
@@ -311,25 +311,25 @@ def send_invitation_email(email, role, invitation_link, inviter_name):
         </body>
         </html>
         """
-        
+
         text_body = f"""
         SecureSphere Invitation
-        
+
         Hello,
-        
+
         {inviter_name} has invited you to join SecureSphere as a {role.title()}.
-        
+
         To accept this invitation and create your account, please visit:
         {invitation_link}
-        
+
         This invitation link will expire in 7 days.
-        
+
         If you didn't expect this invitation, you can safely ignore this email.
-        
+
         Best regards,
         The SecureSphere Team
         """
-        
+
         msg = Message(
             subject=subject,
             sender=app.config['MAIL_DEFAULT_SENDER'],
@@ -337,10 +337,10 @@ def send_invitation_email(email, role, invitation_link, inviter_name):
             body=text_body,
             html=html_body
         )
-        
+
         mail.send(msg)
         return True
-        
+
     except Exception as e:
         print(f"Failed to send email: {str(e)}")
         return False
@@ -392,13 +392,13 @@ def init_database():
             print("✅ Database tables initialized")
         except Exception as e:
             print(f"❌ Error initializing database: {e}")
-            
+
         # Fix any existing naive datetime entries
         try:
             fix_naive_datetimes()
         except Exception as e:
             print(f"⚠️ Warning: Could not fix naive datetimes: {e}")
-            
+
         # Ensure default admin user exists
         admin_user = User.query.filter_by(username='admin').first()
         if not admin_user:
@@ -419,35 +419,35 @@ def init_database():
 def fix_naive_datetimes():
     """Fix any naive datetime entries in the database"""
     print("🔧 Checking for naive datetime entries...")
-    
+
     # Fix InvitationToken entries
     invitations = InvitationToken.query.all()
     fixed_count = 0
-    
+
     for invitation in invitations:
         needs_update = False
-        
+
         # Fix expires_at if it's naive
-        if invitation.expires_at and (invitation.expires_at.tzinfo is None or 
+        if invitation.expires_at and (invitation.expires_at.tzinfo is None or
                                     invitation.expires_at.tzinfo.utcoffset(invitation.expires_at) is None):
             invitation.expires_at = invitation.expires_at.replace(tzinfo=timezone.utc)
             needs_update = True
-            
+
         # Fix created_at if it's naive
-        if invitation.created_at and (invitation.created_at.tzinfo is None or 
+        if invitation.created_at and (invitation.created_at.tzinfo is None or
                                     invitation.created_at.tzinfo.utcoffset(invitation.created_at) is None):
             invitation.created_at = invitation.created_at.replace(tzinfo=timezone.utc)
             needs_update = True
-            
+
         # Fix used_at if it's naive
-        if invitation.used_at and (invitation.used_at.tzinfo is None or 
+        if invitation.used_at and (invitation.used_at.tzinfo is None or
                                  invitation.used_at.tzinfo.utcoffset(invitation.used_at) is None):
             invitation.used_at = invitation.used_at.replace(tzinfo=timezone.utc)
             needs_update = True
-            
+
         if needs_update:
             fixed_count += 1
-    
+
     if fixed_count > 0:
         db.session.commit()
         print(f"✅ Fixed {fixed_count} naive datetime entries")
@@ -461,17 +461,17 @@ def calculate_score_for_answer(question, answer):
             reader = csv.DictReader(f)
             current_question = None
             question_scores = {}
-            
+
             for row in reader:
                 q = row['Questions'].strip()
                 option = row['Options'].strip()
                 scores_text = row.get('Scores', '').strip()
-                
+
                 # Track current question
                 if q:
                     current_question = q
                     question_scores = {}
-                
+
                 # Store score for each option of current question
                 if current_question and option and scores_text:
                     try:
@@ -479,14 +479,14 @@ def calculate_score_for_answer(question, answer):
                         question_scores[option] = score
                     except (ValueError, TypeError):
                         pass
-                
+
                 # Check if we found a match for our question and answer
                 if current_question == question and answer in question_scores:
                     return question_scores[answer] * 20  # Scale 1-5 to 20-100 scoring system
-                    
+
     except FileNotFoundError:
         print("CSV file not found, using default scoring")
-    
+
     # Default scoring based on option letter if CSV parsing fails
     if answer.startswith('A)'):
         return 20  # Lowest score (1*20)
@@ -515,13 +515,13 @@ def update_product_status(product_id, user_id):
     if not status_record:
         status_record = ProductStatus(product_id=product_id, user_id=user_id)
         db.session.add(status_record)
-    
+
     # Count total questions and answered questions
     total_questions = sum(len(questions) for questions in QUESTIONNAIRE.values())
     answered_questions = QuestionnaireResponse.query.filter_by(
         product_id=product_id, user_id=user_id
     ).count()
-    
+
     # Count reviewed questions (with safety check for is_reviewed column)
     try:
         reviewed_questions = QuestionnaireResponse.query.filter_by(
@@ -530,7 +530,7 @@ def update_product_status(product_id, user_id):
     except Exception:
         # If is_reviewed column doesn't exist yet, assume no questions are reviewed
         reviewed_questions = 0
-    
+
     # Update status based on progress
     if answered_questions == 0:
         status_record.status = 'in_progress'
@@ -545,18 +545,18 @@ def update_product_status(product_id, user_id):
             QuestionnaireResponse.user_id == user_id,
             LeadComment.status == 'approved'
         ).count()
-        
+
         if approved_count == answered_questions:
             status_record.status = 'completed'
         else:
             status_record.status = 'review_done'
     else:
         status_record.status = 'in_progress'
-    
+
     status_record.questions_completed = answered_questions
     status_record.total_questions = total_questions
     status_record.last_updated = datetime.utcnow()
-    
+
     db.session.commit()
     return status_record.status
 
@@ -565,17 +565,17 @@ def calculate_and_store_scores(product_id, user_id):
     responses = QuestionnaireResponse.query.filter_by(
         product_id=product_id, user_id=user_id
     ).all()
-    
+
     section_scores = {}
     section_max_scores = {}
-    
+
     # Calculate scores by section
     for response in responses:
         section = response.section
         if section not in section_scores:
             section_scores[section] = 0
             section_max_scores[section] = 0
-        
+
         # Calculate score for this response
         score = calculate_score_for_answer(response.question, response.answer)
         try:
@@ -584,21 +584,21 @@ def calculate_and_store_scores(product_id, user_id):
             # If score column doesn't exist yet, skip setting it
             pass
         section_scores[section] += score
-        
+
         # Calculate max possible score for this question
         max_score = 100  # Default max score per question
         section_max_scores[section] += max_score
-    
+
     # Store scores in ScoreHistory
     for section, total_score in section_scores.items():
         max_score = section_max_scores.get(section, 1)
         percentage = (total_score / max_score * 100) if max_score > 0 else 0
-        
+
         # Remove old score record for this section
         ScoreHistory.query.filter_by(
             product_id=product_id, user_id=user_id, section_name=section
         ).delete()
-        
+
         # Add new score record
         score_record = ScoreHistory(
             product_id=product_id,
@@ -609,7 +609,7 @@ def calculate_and_store_scores(product_id, user_id):
             percentage=percentage
         )
         db.session.add(score_record)
-    
+
     db.session.commit()
     return section_scores
 
@@ -635,13 +635,13 @@ def register():
     # Get invitation token from URL
     token = request.args.get('token')
     invitation = None
-    
+
     if token:
         invitation = InvitationToken.query.filter_by(token=token, is_used=False).first()
         if not invitation:
             flash('Invalid invitation link.')
             return redirect(url_for('login'))
-        
+
         # Check if invitation is expired with error handling
         try:
             if invitation.is_expired():
@@ -664,59 +664,59 @@ def register():
     else:
         flash('Registration requires a valid invitation.')
         return redirect(url_for('login'))
-    
+
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
         organization = request.form.get('organization', '')
-        
+
         # Validate invitation token
         if not invitation:
             flash('Registration requires a valid invitation.')
             return redirect(url_for('login'))
-        
+
         # Ensure email matches invitation
         if email != invitation.email:
             flash('Email must match the invitation.')
             return redirect(url_for('register', token=token))
-        
+
         # Server-side validation
         if not username or not email or not password:
             flash('Please fill in all fields.')
             return redirect(url_for('register', token=token))
-        
+
         if User.query.filter_by(username=username).first():
             flash('Username already exists.')
             return redirect(url_for('register', token=token))
-        
+
         import re
         if not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
             flash('Invalid email format.')
             return redirect(url_for('register', token=token))
-        
+
         if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password) or not re.search(r'\d', password):
             flash('Password must be at least 8 characters and include uppercase, lowercase, and number.')
             return redirect(url_for('register', token=token))
-        
+
         # Create user with invitation details
         user = User(
-            username=username, 
-            email=email, 
+            username=username,
+            email=email,
             role=invitation.role,  # Use role from invitation
             organization=organization or invitation.organization
         )
         user.set_password(password)
         db.session.add(user)
-        
+
         # Mark invitation as used
         invitation.is_used = True
         invitation.used_at = datetime.now(timezone.utc)
-        
+
         db.session.commit()
         flash('Registration successful. Please login.')
         return redirect(url_for('login'))
-    
+
     return render_template('register.html', invitation=invitation)
 
 @app.route('/login', methods=['GET', 'POST'])
@@ -758,19 +758,19 @@ def dashboard():
                 status_record = ProductStatus(product_id=product.id, user_id=user_id)
                 db.session.add(status_record)
                 db.session.commit()
-            
+
             # Get responses and calculate progress
             responses = QuestionnaireResponse.query.filter_by(product_id=product.id, user_id=user_id).all()
             completed_sections = set([r.section for r in responses])
             total_sections = len(SECTION_IDS)
             completed_sections_count = len(completed_sections)
-            
+
             # Check for rejected questions that need client attention
             rejected_responses = QuestionnaireResponse.query.filter_by(
                 product_id=product.id, user_id=user_id, needs_client_response=True
             ).all()
             rejected_count = len(rejected_responses)
-            
+
             # If there are rejected questions, the assessment status should reflect this
             if rejected_count > 0:
                 status_record.status = 'needs_client_response'
@@ -781,23 +781,23 @@ def dashboard():
                     status_record.status = 'completed'
                 else:
                     status_record.status = 'under_review'
-            
+
             # Find next section to continue
             next_section_idx = 0
             for i, section in enumerate(SECTION_IDS):
                 if section not in completed_sections:
                     next_section_idx = i
                     break
-            
+
             # Get latest scores
             latest_scores = ScoreHistory.query.filter_by(
                 product_id=product.id, user_id=user_id
             ).order_by(ScoreHistory.calculated_at.desc()).all()
-            
+
             total_score = sum(score.total_score for score in latest_scores)
             max_possible_score = sum(score.max_score for score in latest_scores)
             overall_percentage = (total_score / max_possible_score * 100) if max_possible_score > 0 else 0
-            
+
             product_info = {
                 'id': product.id,
                 'name': product.name,
@@ -815,10 +815,10 @@ def dashboard():
                 'rejected_count': rejected_count
             }
             products_with_status.append(product_info)
-        
+
         # Get unread comments count for this client
         unread_comments = LeadComment.query.filter_by(client_id=user_id, is_read=False).count()
-        
+
         return render_template('dashboard_client.html', products=products_with_status, unread_comments=unread_comments)
     elif role == 'lead':
         # Get all responses with user and product information - only for completed assessments
@@ -827,14 +827,14 @@ def dashboard():
         ).join(
             Product, QuestionnaireResponse.product_id == Product.id
         ).all()
-        
+
         # Organize responses by client and product - filter for complete assessments only
         clients_data = {}
         for resp, user, product in resps:
             # Check if this product's assessment is complete for this user
             if not is_assessment_complete(product.id, user.id):
                 continue  # Skip incomplete assessments
-                
+
             if user.id not in clients_data:
                 clients_data[user.id] = {
                     'user': user,
@@ -846,22 +846,22 @@ def dashboard():
                     'responses': []
                 }
             clients_data[user.id]['products'][product.id]['responses'].append(resp)
-        
+
         return render_template('dashboard_lead.html', clients_data=clients_data)
     elif role == 'superuser':
         products = Product.query.all()
-        
+
         # Get detailed product data with responses and scoring
         products_data = []
         for product in products:
             responses = QuestionnaireResponse.query.filter_by(product_id=product.id).all()
-            
+
             # Calculate scores by dimension
             dimension_scores = {}
             for resp in responses:
                 if resp.section not in dimension_scores:
                     dimension_scores[resp.section] = {'total': 0, 'count': 0}
-                
+
                 # Simple scoring based on answer (this can be made more sophisticated)
                 score = 0
                 if 'yes' in resp.answer.lower() or 'high' in resp.answer.lower():
@@ -872,20 +872,20 @@ def dashboard():
                     score = 0
                 else:
                     score = 25  # Default for other answers
-                
+
                 dimension_scores[resp.section]['total'] += score
                 dimension_scores[resp.section]['count'] += 1
-            
+
             # Calculate average scores for each dimension
             for dimension in dimension_scores:
                 if dimension_scores[dimension]['count'] > 0:
                     dimension_scores[dimension]['average'] = dimension_scores[dimension]['total'] / dimension_scores[dimension]['count']
                 else:
                     dimension_scores[dimension]['average'] = 0
-            
+
             # Get product owner info
             owner = User.query.get(product.owner_id)
-            
+
             products_data.append({
                 'product': product,
                 'owner': owner,
@@ -893,7 +893,7 @@ def dashboard():
                 'dimension_scores': dimension_scores,
                 'total_responses': len(responses)
             })
-        
+
         # Get all responses and comments for admin view
         all_responses = db.session.query(QuestionnaireResponse, User, Product).join(
             User, QuestionnaireResponse.user_id == User.id
@@ -901,7 +901,7 @@ def dashboard():
             Product, QuestionnaireResponse.product_id == Product.id
         ).order_by(QuestionnaireResponse.created_at.desc()).limit(100).all()
         all_comments = LeadComment.query.options(db.joinedload(LeadComment.product), db.joinedload(LeadComment.lead), db.joinedload(LeadComment.client)).order_by(LeadComment.created_at.desc()).limit(50).all()
-        
+
         return render_template('dashboard_superuser.html', products_data=products_data, all_responses=all_responses, all_comments=all_comments)
     return redirect(url_for('index'))
 
@@ -925,17 +925,19 @@ def add_product():
         cloud_platform_other = request.form.get('cloud_platform_other', '')
         cicd_platform = request.form['cicd_platform']
         additional_details = request.form.get('additional_details', '')
-        
+
+
         if not name or not product_url or not programming_language or not cloud_platform or not cicd_platform:
             flash('Please fill in all required fields.')
             return redirect(url_for('add_product'))
-        
+
         # If cloud_platform is "Other", use the custom value
         if cloud_platform == 'Other' and cloud_platform_other:
             cloud_platform = cloud_platform_other
-            
+
         product = Product(
-            name=name, 
+            name=name,
+
             product_url=product_url,
             programming_language=programming_language,
             cloud_platform=cloud_platform,
@@ -960,14 +962,14 @@ def fill_questionnaire_section(product_id, section_idx):
         return redirect(url_for('dashboard'))
     section_name = sections[section_idx]
     questions = QUESTIONNAIRE[section_name]
-    
+
     # Get existing responses for this section to pre-populate form
     existing_responses = QuestionnaireResponse.query.filter_by(
-        product_id=product_id, 
-        user_id=session['user_id'], 
+        product_id=product_id,
+        user_id=session['user_id'],
         section=section_name
     ).all()
-    
+
     # Create a dictionary for quick lookup of existing responses
     existing_answers = {}
     for resp in existing_responses:
@@ -975,7 +977,7 @@ def fill_questionnaire_section(product_id, section_idx):
             if q['question'] == resp.question:
                 existing_answers[i] = resp
                 break
-    
+
     if request.method == 'POST':
         # Get lead comments for validation
         response_ids = [resp.id for resp in existing_responses]
@@ -984,17 +986,17 @@ def fill_questionnaire_section(product_id, section_idx):
             comments = LeadComment.query.filter(LeadComment.response_id.in_(response_ids)).all()
             for comment in comments:
                 lead_comments[comment.response_id] = comment
-        
+
         # Delete existing responses for this section before adding new ones (except approved ones)
         responses_to_delete = []
         for resp in existing_responses:
             lead_comment = lead_comments.get(resp.id)
             if not lead_comment or lead_comment.status != 'approved':
                 responses_to_delete.append(resp.id)
-        
+
         if responses_to_delete:
             QuestionnaireResponse.query.filter(QuestionnaireResponse.id.in_(responses_to_delete)).delete()
-        
+
         for i, q in enumerate(questions):
             # Check if this question is approved
             existing_resp = existing_answers.get(i)
@@ -1003,12 +1005,12 @@ def fill_questionnaire_section(product_id, section_idx):
                 if lead_comment and lead_comment.status == 'approved':
                     # Keep the approved response as-is, don't update it
                     continue
-            
+
             answer = request.form.get(f'answer_{i}')
             comment = request.form.get(f'comment_{i}')
             file = request.files.get(f'evidence_{i}')
             evidence_path = ""
-            
+
             # Keep existing evidence if no new file uploaded
             if file and file.filename and allowed_file(file.filename):
                 filename = secure_filename(f"{product_id}_{section_idx}_{i}_{file.filename}")
@@ -1017,7 +1019,7 @@ def fill_questionnaire_section(product_id, section_idx):
                 evidence_path = filepath
             elif i in existing_answers:
                 evidence_path = existing_answers[i].evidence_path or ''
-            
+
             resp = QuestionnaireResponse(
                 user_id=session['user_id'],
                 product_id=product_id,
@@ -1031,11 +1033,11 @@ def fill_questionnaire_section(product_id, section_idx):
             )
             db.session.add(resp)
         db.session.commit()
-        
+
         # Update product status and calculate scores
         status = update_product_status(product_id, session['user_id'])
         calculate_and_store_scores(product_id, session['user_id'])
-        
+
         if section_idx + 1 < len(sections):
             return redirect(url_for('fill_questionnaire_section', product_id=product_id, section_idx=section_idx+1))
         else:
@@ -1046,12 +1048,12 @@ def fill_questionnaire_section(product_id, section_idx):
             else:
                 flash("Section saved successfully!")
             return redirect(url_for('dashboard'))
-    
+
     completed_sections = [
         s.section for s in QuestionnaireResponse.query.filter_by(product_id=product_id, user_id=session['user_id']).distinct(QuestionnaireResponse.section)
     ]
     progress = [(i, s, (s in completed_sections)) for i, s in enumerate(sections)]
-    
+
     # Get review status for questions in this section
     question_review_status = {}
     if existing_responses:
@@ -1064,7 +1066,7 @@ def fill_questionnaire_section(product_id, section_idx):
                         if q['question'] == resp.question:
                             question_review_status[i] = comment.status
                             break
-    
+
     return render_template(
         'fill_questionnaire_section.html',
         product=product,
@@ -1108,10 +1110,10 @@ def client_reply_comment(comment_id):
     if parent_comment.client_id != session['user_id']:
         flash('Unauthorized access.')
         return redirect(url_for('dashboard'))
-    
+
     reply_text = request.form['reply']
     evidence_file = request.files.get('evidence')
-    
+
     if reply_text.strip():
         evidence_path = None
         # Handle evidence upload if provided
@@ -1122,7 +1124,7 @@ def client_reply_comment(comment_id):
             evidence_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             os.makedirs(os.path.dirname(evidence_path), exist_ok=True)
             evidence_file.save(evidence_path)
-        
+
         # Create a reply comment
         reply_comment = LeadComment(
             response_id=parent_comment.response_id,
@@ -1134,17 +1136,17 @@ def client_reply_comment(comment_id):
             parent_comment_id=comment_id
         )
         db.session.add(reply_comment)
-        
+
         # If evidence provided, also update the original response
         if evidence_path and parent_comment.response_id:
             original_response = QuestionnaireResponse.query.get(parent_comment.response_id)
             if original_response:
                 original_response.evidence_path = evidence_path
                 original_response.client_comment = reply_text
-        
+
         db.session.commit()
         flash('Reply sent to lead successfully.')
-    
+
     return redirect(request.referrer or url_for('client_comments'))
 
 @app.route('/lead/comment/<int:comment_id>/reply', methods=['POST'])
@@ -1154,10 +1156,10 @@ def lead_reply_comment(comment_id):
     if parent_comment.lead_id != session['user_id']:
         flash('Unauthorized access.')
         return redirect(url_for('dashboard'))
-    
+
     reply_text = request.form['reply']
     status = request.form.get('review_status', 'pending')
-    
+
     if reply_text.strip():
         # Create a reply comment
         reply_comment = LeadComment(
@@ -1170,7 +1172,7 @@ def lead_reply_comment(comment_id):
             parent_comment_id=comment_id
         )
         db.session.add(reply_comment)
-        
+
         # Update the original response if needed
         if parent_comment.response_id and status in ['needs_revision', 'rejected']:
             original_response = QuestionnaireResponse.query.get(parent_comment.response_id)
@@ -1179,10 +1181,10 @@ def lead_reply_comment(comment_id):
                 # For rejected responses, ensure they're marked for client attention
                 if status == 'rejected':
                     original_response.needs_client_response = True
-        
+
         db.session.commit()
         flash('Reply sent to client successfully.')
-    
+
     return redirect(request.referrer or url_for('dashboard'))
 
 @app.route('/review/<int:response_id>', methods=['GET', 'POST'])
@@ -1192,7 +1194,7 @@ def review_questionnaire(response_id):
     if request.method == 'POST':
         comment = request.form['lead_comment']
         status = request.form.get('review_status', 'pending')
-        
+
         # Create lead comment
         lead_comment = LeadComment(
             response_id=response_id,
@@ -1203,7 +1205,7 @@ def review_questionnaire(response_id):
             status=status
         )
         db.session.add(lead_comment)
-        
+
         # Mark response as reviewed (with safety check)
         try:
             if status == 'rejected':
@@ -1214,13 +1216,13 @@ def review_questionnaire(response_id):
         except Exception:
             # If is_reviewed column doesn't exist yet, skip setting it
             pass
-        
+
         db.session.commit()
-        
+
         # Update product status and recalculate scores
         update_product_status(resp.product_id, resp.user_id)
         calculate_and_store_scores(resp.product_id, resp.user_id)
-        
+
         flash('Review comment sent to client.')
         return redirect(url_for('dashboard'))
     return render_template('review_questionnaire.html', response=resp)
@@ -1237,21 +1239,21 @@ def admin_create_product():
     if request.method == 'POST':
         product_name = request.form['product_name']
         client_id = request.form['client_id']
-        
+
         # Verify client exists
         client = User.query.filter_by(id=client_id, role='client').first()
         if not client:
             flash('Invalid client selected.')
             return redirect(url_for('admin_create_product'))
-        
+
         # Create product
         product = Product(name=product_name, owner_id=client_id)
         db.session.add(product)
         db.session.commit()
-        
+
         flash(f'Product "{product_name}" created successfully for {client.username}.')
         return redirect(url_for('dashboard'))
-    
+
     # Get all clients for the form
     clients = User.query.filter_by(role='client').all()
     return render_template('admin_create_product.html', clients=clients)
@@ -1262,7 +1264,7 @@ def admin_analytics():
     # Get all products and their scores for analytics
     products = Product.query.all()
     analytics_data = []
-    
+
     for product in products:
         responses = QuestionnaireResponse.query.filter_by(product_id=product.id).all()
         if responses:
@@ -1270,21 +1272,21 @@ def admin_analytics():
             total_score = 0
             total_questions = 0
             section_scores = {}
-            
+
             for response in responses:
                 if response.answer.isdigit():
                     score = int(response.answer)
                     total_score += score
                     total_questions += 1
-                    
+
                     if response.section not in section_scores:
                         section_scores[response.section] = []
                     section_scores[response.section].append(score)
-            
+
             if total_questions > 0:
                 avg_score = total_score / total_questions
                 owner = User.query.get(product.owner_id)
-                
+
                 analytics_data.append({
                     'product': product,
                     'owner': owner,
@@ -1292,7 +1294,7 @@ def admin_analytics():
                     'total_responses': len(responses),
                     'section_scores': {k: sum(v)/len(v) for k, v in section_scores.items()}
                 })
-    
+
     return render_template('admin_analytics.html', analytics_data=analytics_data)
 
 @app.route('/admin/products/delete/<int:product_id>')
@@ -1315,20 +1317,20 @@ def api_product_scores(product_id):
     total_score = 0
     total_max_score = 0
     csv_map = {}
-    
+
     # Build scoring map from CSV
     with open('devweb.csv', encoding='utf-8') as f:
         reader = csv.DictReader(f)
         current_question = None
         current_dimension = None
         question_options = {}
-        
+
         for row in reader:
             dimension = row['Dimensions'].strip()
             question = row['Questions'].strip()
             option = row['Options'].strip()
             score_text = row.get('Scores', '').strip()
-            
+
             # Track current dimension and question
             if dimension:
                 current_dimension = dimension
@@ -1337,7 +1339,7 @@ def api_product_scores(product_id):
                 question_options = {}
                 if current_dimension not in section_max_scores:
                     section_max_scores[current_dimension] = 0
-            
+
             # Store option and score for current question
             if current_question and option and score_text:
                 try:
@@ -1346,7 +1348,7 @@ def api_product_scores(product_id):
                     csv_map[current_question] = question_options.copy()
                 except (ValueError, TypeError):
                     pass
-        
+
         # Calculate max scores per section
         for question, options in csv_map.items():
             if options:
@@ -1358,7 +1360,7 @@ def api_product_scores(product_id):
                             section_max_scores[dimension] += max_score
                             total_max_score += max_score
                         break
-    
+
     # Calculate actual scores
     question_scores = {}
     for r in resps:
@@ -1366,27 +1368,27 @@ def api_product_scores(product_id):
         if sec not in section_scores:
             section_scores[sec] = 0
             section_counts[sec] = 0
-        
+
         score = csv_map.get(r.question, {}).get(r.answer, 0)
         section_scores[sec] += score
         section_counts[sec] += 1
         total_score += score
-        
+
         # Store individual question scores
         question_scores[f"{r.question}:{r.answer}"] = score
-    
+
     # Calculate percentages
     section_labels = list(section_scores.keys())
     section_values = [section_scores[k] for k in section_labels]
     section_percentages = []
-    
+
     for section in section_labels:
         max_section_score = section_max_scores.get(section, 1)
         percentage = (section_scores[section] / max_section_score * 100) if max_section_score > 0 else 0
         section_percentages.append(round(percentage, 1))
-    
+
     overall_percentage = (total_score / total_max_score * 100) if total_max_score > 0 else 0
-    
+
     return jsonify({
         "section_labels": section_labels,
         "section_scores": section_values,
@@ -1404,11 +1406,11 @@ def api_product_scores(product_id):
 def api_all_scores():
     products = Product.query.all()
     all_scores = []
-    
+
     for product in products:
         product_data = {}
         resps = QuestionnaireResponse.query.filter_by(product_id=product.id).all()
-        
+
         if resps:
             # Get scores for this product
             section_scores = {}
@@ -1416,20 +1418,20 @@ def api_all_scores():
             total_score = 0
             total_max_score = 0
             csv_map = {}
-            
+
             # Build scoring map
             with open('devweb.csv', encoding='utf-8') as f:
                 reader = csv.DictReader(f)
                 current_question = None
                 current_dimension = None
                 question_options = {}
-                
+
                 for row in reader:
                     dimension = row['Dimensions'].strip()
                     question = row['Questions'].strip()
                     option = row['Options'].strip()
                     score_text = row.get('Scores', '').strip()
-                    
+
                     # Track current dimension and question
                     if dimension:
                         current_dimension = dimension
@@ -1438,7 +1440,7 @@ def api_all_scores():
                         question_options = {}
                         if current_dimension not in section_max_scores:
                             section_max_scores[current_dimension] = 0
-                    
+
                     # Store option and score for current question
                     if current_question and option and score_text:
                         try:
@@ -1447,7 +1449,7 @@ def api_all_scores():
                             csv_map[current_question] = question_options.copy()
                         except (ValueError, TypeError):
                             pass
-                
+
                 # Calculate max scores per section
                 for question, options in csv_map.items():
                     if options:
@@ -1458,22 +1460,22 @@ def api_all_scores():
                                 section_max_scores[dimension] += max_score
                                 total_max_score += max_score
                                 break
-            
+
             # Calculate scores
             for r in resps:
                 sec = r.section
                 if sec not in section_scores:
                     section_scores[sec] = 0
-                
+
                 score = csv_map.get(r.question, {}).get(r.answer, 0)
                 section_scores[sec] += score
                 total_score += score
-            
+
             overall_percentage = (total_score / total_max_score * 100) if total_max_score > 0 else 0
-            
+
             # Get owner info
             owner = User.query.get(product.owner_id)
-            
+
             product_data = {
                 'id': product.id,
                 'name': product.name,
@@ -1483,7 +1485,7 @@ def api_all_scores():
                 'max_score': total_max_score,
                 'percentage': round(overall_percentage, 1),
                 'section_scores': section_scores,
-                'section_percentages': {k: round((v / section_max_scores.get(k, 1) * 100), 1) 
+                'section_percentages': {k: round((v / section_max_scores.get(k, 1) * 100), 1)
                                        for k, v in section_scores.items()}
             }
         else:
@@ -1498,9 +1500,9 @@ def api_all_scores():
                 'section_scores': {},
                 'section_percentages': {}
             }
-        
+
         all_scores.append(product_data)
-    
+
     return jsonify(all_scores)
 
 @app.route('/admin/invite_user', methods=['GET', 'POST'])
@@ -1510,21 +1512,21 @@ def invite_user():
         email = request.form['email']
         role = request.form['role']
         organization = request.form.get('organization', '')
-        
+
         # Validate inputs
         if not email or not role:
             flash('Email and role are required.')
             return redirect(url_for('invite_user'))
-        
+
         if role not in ['client', 'lead']:
             flash('Invalid role. Must be client or lead.')
             return redirect(url_for('invite_user'))
-        
+
         # Check if user already exists
         if User.query.filter_by(email=email).first():
             flash('User with this email already exists.')
             return redirect(url_for('invite_user'))
-        
+
         # Check if there's already a pending invitation
         existing_invitation = InvitationToken.query.filter_by(email=email, is_used=False).first()
         if existing_invitation:
@@ -1536,11 +1538,11 @@ def invite_user():
                 print(f"Error checking existing invitation expiration: {e}")
                 # If there's an error, assume it's expired and continue with new invitation
                 pass
-        
+
         # Generate invitation token
         token = secrets.token_urlsafe(32)
         expires_at = datetime.now(timezone.utc) + timedelta(days=7)  # 7 days to accept
-        
+
         invitation = InvitationToken(
             token=token,
             email=email,
@@ -1549,27 +1551,27 @@ def invite_user():
             invited_by=session['user_id'],
             expires_at=expires_at
         )
-        
+
         db.session.add(invitation)
         db.session.commit()
-        
+
         # Generate invitation link
         invitation_link = url_for('register', token=token, _external=True)
-        
+
         # Get inviter's name
         inviter = User.query.get(session['user_id'])
         inviter_name = f"{inviter.first_name} {inviter.last_name}".strip() or inviter.username
-        
+
         # Try to send email invitation
         email_sent = send_invitation_email(email, role, invitation_link, inviter_name)
-        
+
         if email_sent:
             flash(f'Invitation email sent successfully to {email}! They will receive a registration link via email.', 'success')
         else:
             flash(f'Invitation created but email could not be sent. Registration link: {invitation_link}', 'warning')
-        
+
         return redirect(url_for('invite_user'))
-    
+
     return render_template('admin_invite_user.html')
 
 @app.route('/admin/manage_users')
@@ -1586,20 +1588,20 @@ def create_lead():
     email = request.form['email']
     password = request.form['password']
     organization = request.form.get('organization', '')
-    
+
     # Validate inputs
     if not username or not email or not password:
         flash('Username, email, and password are required.')
         return redirect(url_for('manage_users'))
-    
+
     if User.query.filter_by(username=username).first():
         flash('Username already exists.')
         return redirect(url_for('manage_users'))
-    
+
     if User.query.filter_by(email=email).first():
         flash('Email already exists.')
         return redirect(url_for('manage_users'))
-    
+
     # Create lead user
     user = User(
         username=username,
@@ -1610,7 +1612,7 @@ def create_lead():
     user.set_password(password)
     db.session.add(user)
     db.session.commit()
-    
+
     flash(f'Lead user {username} created successfully. Password: {password}')
     return redirect(url_for('manage_users'))
 

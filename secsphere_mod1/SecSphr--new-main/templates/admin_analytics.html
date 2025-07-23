@@ -173,7 +173,7 @@
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{{ url_for('admin_product_details', product_id=data.product.id) }}" 
+                                <a href="{{ url_for('admin_product_details', product_id=data.product.id) }}"
                                    class="btn btn-sm btn-outline-primary">
                                     <i class="bi bi-eye me-1"></i>View Details
                                 </a>
@@ -197,7 +197,7 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const analyticsData = {{ analytics_data|tojson }};
-    
+
     // Product Scores Chart
     const productCtx = document.getElementById('productScoresChart').getContext('2d');
     new Chart(productCtx, {
