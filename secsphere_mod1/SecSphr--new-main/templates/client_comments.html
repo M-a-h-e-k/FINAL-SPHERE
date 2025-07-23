@@ -152,6 +152,21 @@ function toggleReplyForm(commentId) {
     if (form.style.display === 'none') {
         form.style.display = 'block';
         form.scrollIntoView({ behavior: 'smooth' });
+        
+        // Auto-mark as read when reply is clicked
+        const markReadBtn = document.querySelector(`a[href*="mark_comment_read"][href*="${commentId}"]`);
+        if (markReadBtn) {
+            fetch(markReadBtn.href, { method: 'GET' })
+                .then(() => {
+                    markReadBtn.style.display = 'none';
+                    // Remove any unread styling
+                    const messageGroup = form.closest('.message-group');
+                    if (messageGroup) {
+                        messageGroup.classList.remove('unread');
+                    }
+                })
+                .catch(err => console.log('Auto-mark read failed:', err));
+        }
     } else {
         form.style.display = 'none';
     }
@@ -161,6 +176,20 @@ function toggleReplyForm(commentId) {
 document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chatMessages');
     chatMessages.scrollTop = chatMessages.scrollHeight;
+    
+    // Auto-mark as read after 3 seconds of viewing
+    setTimeout(() => {
+        const unreadButtons = document.querySelectorAll('a[href*="mark_comment_read"]');
+        unreadButtons.forEach(btn => {
+            if (btn.style.display !== 'none') {
+                fetch(btn.href, { method: 'GET' })
+                    .then(() => {
+                        btn.style.display = 'none';
+                    })
+                    .catch(err => console.log('Auto-mark read failed:', err));
+            }
+        });
+    }, 3000);
 });
 </script>
 {% endblock %}
