@@ -3,7 +3,7 @@
 {% block title %}Lead Dashboard - SecureSphere{% endblock %}
 
 {% block content %}
-<div class="container my-4">
+<div class="container my-4 dashboard-lead">
 <div class="dashboard-header text-center mb-4">
     <h1 class="display-6 fw-bold mb-2">
         <i class="bi bi-person-badge me-3"></i>Reviewer Dashboard
@@ -164,17 +164,28 @@
                                     {% endfor %}
                                     
                                     {% for section_name, section_responses in sections.items() %}
-                                    <div class="section-container mb-4">
+                                    <div class="section-container mb-3">
                                         <div class="card border-0 shadow-sm">
-                                            <div class="card-header bg-gradient-primary text-white">
-                                                <div class="d-flex align-items-center justify-content-between">
-                                                    <h6 class="mb-0">
-                                                        <i class="bi bi-folder me-2"></i>{{ section_name }}
-                                                    </h6>
-                                                    <span class="badge bg-light text-dark">{{ section_responses|length }} questions</span>
-                                                </div>
+                                            <div class="card-header bg-gradient-primary text-white p-0">
+                                                <button class="btn btn-link text-white text-decoration-none w-100 text-start p-3" 
+                                                        type="button" 
+                                                        data-bs-toggle="collapse" 
+                                                        data-bs-target="#section-{{ client_id }}-{{ product_id }}-{{ loop.index0 }}" 
+                                                        aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" 
+                                                        aria-controls="section-{{ client_id }}-{{ product_id }}-{{ loop.index0 }}">
+                                                    <div class="d-flex align-items-center justify-content-between">
+                                                        <h6 class="mb-0">
+                                                            <i class="bi bi-folder me-2"></i>{{ section_name }}
+                                                        </h6>
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="badge bg-light text-dark me-2">{{ section_responses|length }} questions</span>
+                                                            <i class="bi bi-chevron-down collapse-icon"></i>
+                                                        </div>
+                                                    </div>
+                                                </button>
                                             </div>
-                                            <div class="card-body p-0">
+                                            <div class="collapse {% if loop.first %}show{% endif %}" id="section-{{ client_id }}-{{ product_id }}-{{ loop.index0 }}">
+                                                <div class="card-body p-0">
                                                 <div class="table-responsive">
                                                     <table class="table table-hover mb-0">
                                                         <thead class="table-light">
@@ -247,6 +258,7 @@
                                                             {% endfor %}
                                                         </tbody>
                                                     </table>
+                                                </div>
                                                 </div>
                                             </div>
                                         </div>

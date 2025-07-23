@@ -560,29 +560,21 @@ body {
     position: relative;
 }
 
+/* Remove tick marks for completed questions */
 .question-number.completed .number-circle {
-    background: var(--success-color);
+    background: var(--primary-color);
     color: white;
     text-align: center;
     line-height: 1.8rem;
 }
 
+/* Remove the tick icon completely */
 .question-number.completed .number-circle::before {
-    content: '';
-    font-family: 'bootstrap-icons';
-    font-size: 0.8rem;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
+    display: none;
 }
 
 .question-number.completed .number-text {
-    display: inline-block;
-    margin-left: 0.5rem;
-    font-size: var(--font-size-sm);
-    font-weight: 600;
-    color: var(--success-color);
+    display: none;
 }
 
 .question-number:not(.completed) .number-text {
@@ -2159,6 +2151,19 @@ h6 { font-size: 0.825rem; font-weight: 600; }
     border: 1px solid var(--success-color);
 }
 
+.status-badge-clean.needs_client_response {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+    border: 1px solid #bd2130;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
 /* Review Status Options - Better Alignment */
 .review-status-options {
     padding-left: 1rem;
@@ -2395,4 +2400,107 @@ h6 { font-size: 0.825rem; font-weight: 600; }
 
 .status-pending {
     border-left: 4px solid #6c757d;
+}
+
+/* Lead Review Section - Improved Column Alignment and Text Alignment */
+.dashboard-lead .table th,
+.dashboard-lead .table td {
+    vertical-align: middle;
+    text-align: left;
+    padding: 0.75rem;
+}
+
+.dashboard-lead .table th:first-child,
+.dashboard-lead .table td:first-child {
+    text-align: center;
+    width: 5%;
+}
+
+.dashboard-lead .table th:nth-child(2),
+.dashboard-lead .table td:nth-child(2) {
+    text-align: left;
+    width: 40%;
+    padding-left: 1rem;
+}
+
+.dashboard-lead .table th:nth-child(3),
+.dashboard-lead .table td:nth-child(3) {
+    text-align: center;
+    width: 15%;
+}
+
+.dashboard-lead .table th:nth-child(4),
+.dashboard-lead .table td:nth-child(4) {
+    text-align: center;
+    width: 15%;
+}
+
+.dashboard-lead .table th:nth-child(5),
+.dashboard-lead .table td:nth-child(5) {
+    text-align: center;
+    width: 10%;
+}
+
+.dashboard-lead .table th:nth-child(6),
+.dashboard-lead .table td:nth-child(6) {
+    text-align: center;
+    width: 15%;
+}
+
+/* Question text proper wrapping and indentation */
+.dashboard-lead .table td p {
+    margin-bottom: 0.25rem;
+    line-height: 1.4;
+    text-align: left;
+}
+
+.dashboard-lead .table td small {
+    display: block;
+    margin-top: 0.25rem;
+    padding-left: 0.5rem;
+    text-align: left;
+}
+
+/* Question number clean styling for lead dashboard */
+.question-number-clean {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    background: var(--primary-color);
+    color: white;
+    border-radius: 50%;
+    font-size: 0.875rem;
+    font-weight: 600;
+    min-width: 2rem;
+    text-align: center;
+}
+
+/* Collapsible Section Styling for Lead Review */
+.dashboard-lead .collapse-icon {
+    transition: transform 0.2s ease-in-out;
+}
+
+.dashboard-lead .btn[aria-expanded="true"] .collapse-icon {
+    transform: rotate(180deg);
+}
+
+.dashboard-lead .btn[aria-expanded="false"] .collapse-icon {
+    transform: rotate(0deg);
+}
+
+.dashboard-lead .btn-link:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 0;
+}
+
+.dashboard-lead .section-container .card-header button {
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+
+.dashboard-lead .section-container .card-header button:focus {
+    box-shadow: none;
 }

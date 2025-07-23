@@ -5,80 +5,217 @@ from flask_sqlalchemy import SQLAlchemy
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from functools import wraps
-from datetime import datetime
+from datetime import datetime, timezone
+
+# Add import for generating random tokens
+import secrets
+from datetime import timedelta
 
 app = Flask(__name__)
-app.secret_key = 'supersecretkey'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///securesphere.db'
+app.secret_key = os.environ.get('SECRET_KEY', 'supersecretkey-change-in-production')
+
+# Database Configuration - Professional Setup
+basedir = os.path.abspath(os.path.dirname(__file__))
+app.config['SQLALCHEMY_DATABASE_URI'] = f'sqlite:///{os.path.join(basedir, "instance", "securesphere.db")}'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config['UPLOAD_FOLDER'] = 'static/uploads'
-ALLOWED_EXTENSIONS = {'csv', 'txt', 'pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx'}
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    'pool_timeout': 20,
+    'pool_recycle': -1,
+    'pool_pre_ping': True
+}
+app.config['UPLOAD_FOLDER'] = os.path.join(basedir, 'static', 'uploads')
+ALLOWED_EXTENSIONS = {'csv', 'txt', 'pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xlsx', 'zip'}
+
+# Ensure instance and upload directories exist
+os.makedirs(os.path.join(basedir, 'instance'), exist_ok=True)
+os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
 
 db = SQLAlchemy(app)
 
+# ==================== DATABASE MODELS ====================
+
 class User(db.Model):
+    __tablename__ = 'users'
+    
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    email = db.Column(db.String(120), nullable=False)
-    password = db.Column(db.String(200), nullable=False)
-    role = db.Column(db.String(20), nullable=False)
-    organization = db.Column(db.String(120))
+    username = db.Column(db.String(80), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(120), nullable=False, index=True)
+    password_hash = db.Column(db.String(200), nullable=False)
+    role = db.Column(db.String(20), nullable=False, default='client')  # client, lead, superuser
+    organization = db.Column(db.String(200))
+    first_name = db.Column(db.String(100))
+    last_name = db.Column(db.String(100))
+    phone = db.Column(db.String(20))
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    last_login = db.Column(db.DateTime)
+    
+    # Relationships
+    products = db.relationship('Product', backref='owner', lazy=True, cascade='all, delete-orphan')
+    responses = db.relationship('QuestionnaireResponse', backref='user', lazy=True)
+    
+    def set_password(self, password):
+        self.password_hash = generate_password_hash(password)
+    
+    def check_password(self, password):
+        return check_password_hash(self.password_hash, password)
+    
+    def __repr__(self):
+        return f'<User {self.username}>'
 
 class Product(db.Model):
+    __tablename__ = 'products'
+    
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(120), nullable=False)
-    owner_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    name = db.Column(db.String(200), nullable=False)
+    description = db.Column(db.Text)
+    owner_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    responses = db.relationship('QuestionnaireResponse', backref='product', lazy=True, cascade='all, delete-orphan')
+    statuses = db.relationship('ProductStatus', backref='product', lazy=True, cascade='all, delete-orphan')
+    scores = db.relationship('ScoreHistory', backref='product', lazy=True, cascade='all, delete-orphan')
+    
+    def __repr__(self):
+        return f'<Product {self.name}>'
 
 class ProductStatus(db.Model):
+    __tablename__ = 'product_statuses'
+    
     id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    status = db.Column(db.String(50), default='in_progress')  # in_progress, questions_done, under_review, review_done, completed
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    status = db.Column(db.String(50), default='in_progress')  # in_progress, questions_done, under_review, review_done, completed, needs_client_response
     questions_completed = db.Column(db.Integer, default=0)
     total_questions = db.Column(db.Integer, default=0)
-    last_updated = db.Column(db.DateTime, default=datetime.utcnow)
+    completion_percentage = db.Column(db.Float, default=0.0)
+    last_updated = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
     
-class ScoreHistory(db.Model):
+    # Composite index for better performance
+    __table_args__ = (db.Index('idx_product_user', 'product_id', 'user_id'),)
+    
+    def __repr__(self):
+        return f'<ProductStatus {self.product_id}-{self.user_id}: {self.status}>'
+
+class QuestionnaireResponse(db.Model):
+    __tablename__ = 'questionnaire_responses'
+    
     id = db.Column(db.Integer, primary_key=True)
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    section = db.Column(db.String(100), nullable=False)
+    question = db.Column(db.Text, nullable=False)
+    question_index = db.Column(db.Integer)  # For ordering
+    answer = db.Column(db.String(500))
+    client_comment = db.Column(db.Text)
+    evidence_path = db.Column(db.String(500))
+    score = db.Column(db.Integer, default=0)
+    max_score = db.Column(db.Integer, default=0)
+    is_reviewed = db.Column(db.Boolean, default=False)
+    needs_client_response = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    lead_comments = db.relationship('LeadComment', backref='response', lazy=True, cascade='all, delete-orphan')
+    
+    # Composite indexes for better performance
+    __table_args__ = (
+        db.Index('idx_user_product', 'user_id', 'product_id'),
+        db.Index('idx_section', 'section'),
+        db.Index('idx_needs_response', 'needs_client_response'),
+    )
+    
+    def __repr__(self):
+        return f'<Response {self.id}: {self.section}>'
+
+class LeadComment(db.Model):
+    __tablename__ = 'lead_comments'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    response_id = db.Column(db.Integer, db.ForeignKey('questionnaire_responses.id'))
+    lead_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    client_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    comment = db.Column(db.Text, nullable=False)
+    status = db.Column(db.String(20), default='pending')  # pending, approved, needs_revision, rejected, client_reply
+    parent_comment_id = db.Column(db.Integer, db.ForeignKey('lead_comments.id'), nullable=True)
+    is_read = db.Column(db.Boolean, default=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    # Relationships
+    parent_comment = db.relationship('LeadComment', remote_side=[id], backref='replies')
+    lead = db.relationship('User', foreign_keys=[lead_id], backref='lead_comments_made')
+    client = db.relationship('User', foreign_keys=[client_id], backref='lead_comments_received')
+    
+    # Indexes for better performance
+    __table_args__ = (
+        db.Index('idx_client_read', 'client_id', 'is_read'),
+        db.Index('idx_status', 'status'),
+    )
+    
+    def __repr__(self):
+        return f'<LeadComment {self.id}: {self.status}>'
+
+class ScoreHistory(db.Model):
+    __tablename__ = 'score_history'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    product_id = db.Column(db.Integer, db.ForeignKey('products.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     section_name = db.Column(db.String(100), nullable=False)
     total_score = db.Column(db.Integer, default=0)
     max_score = db.Column(db.Integer, default=0)
     percentage = db.Column(db.Float, default=0.0)
-    calculated_at = db.Column(db.DateTime, default=datetime.utcnow)
+    questions_answered = db.Column(db.Integer, default=0)
+    questions_total = db.Column(db.Integer, default=0)
+    calculated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    
+    # Composite index for better performance
+    __table_args__ = (db.Index('idx_product_user_section', 'product_id', 'user_id', 'section_name'),)
+    
+    def __repr__(self):
+        return f'<ScoreHistory {self.product_id}-{self.section_name}: {self.percentage}%>'
 
-class QuestionnaireResponse(db.Model):
+class SystemSettings(db.Model):
+    __tablename__ = 'system_settings'
+    
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
-    section = db.Column(db.String(100))
-    question = db.Column(db.String(300))
-    answer = db.Column(db.String(200))
-    comment = db.Column(db.Text)
-    evidence_path = db.Column(db.String(200))
-    created_at = db.Column(db.DateTime, default=db.func.current_timestamp())
-    is_reviewed = db.Column(db.Boolean, default=False)
-    score = db.Column(db.Integer, default=0)
+    key = db.Column(db.String(100), unique=True, nullable=False)
+    value = db.Column(db.Text)
+    description = db.Column(db.Text)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
+    
+    def __repr__(self):
+        return f'<SystemSettings {self.key}: {self.value}>'
 
-class LeadComment(db.Model):
+class InvitationToken(db.Model):
+    __tablename__ = 'invitation_tokens'
+    
     id = db.Column(db.Integer, primary_key=True)
-    response_id = db.Column(db.Integer, db.ForeignKey('questionnaire_response.id'))
-    lead_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    client_id = db.Column(db.Integer, db.ForeignKey('user.id'))
-    product_id = db.Column(db.Integer, db.ForeignKey('product.id'))
-    comment = db.Column(db.Text, nullable=False)
-    status = db.Column(db.String(20), default='pending')  # pending, approved, needs_revision, rejected, client_reply
-    parent_comment_id = db.Column(db.Integer, db.ForeignKey('lead_comment.id'), nullable=True)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-    is_read = db.Column(db.Boolean, default=False)
+    token = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(120), nullable=False, index=True)
+    role = db.Column(db.String(20), nullable=False)  # client or lead
+    organization = db.Column(db.String(200))
+    invited_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    is_used = db.Column(db.Boolean, default=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    used_at = db.Column(db.DateTime)
     
     # Relationships
-    parent_comment = db.relationship('LeadComment', remote_side=[id], backref='replies')
-    response = db.relationship('QuestionnaireResponse', backref='lead_comments')
-    lead = db.relationship('User', foreign_keys=[lead_id], backref='lead_comments_made')
-    client = db.relationship('User', foreign_keys=[client_id], backref='lead_comments_received')
-    product = db.relationship('Product', backref='lead_comments')
+    inviter = db.relationship('User', backref='sent_invitations')
+    
+    def is_expired(self):
+        return datetime.now(timezone.utc) > self.expires_at
+    
+    def __repr__(self):
+        return f'<InvitationToken {self.email}: {self.role}>'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -117,6 +254,7 @@ def load_questionnaire():
             sections[current_dimension].append(current_question_obj)
     return sections
 
+# Load questionnaire data
 QUESTIONNAIRE = load_questionnaire()
 SECTION_IDS = list(QUESTIONNAIRE.keys())
 
@@ -124,59 +262,28 @@ SECTION_IDS = list(QUESTIONNAIRE.keys())
 def init_database():
     """Initialize database and create tables if they don't exist"""
     with app.app_context():
-        db.create_all()
-        
-        # Check if new columns exist and add them if they don't
         try:
-            # Test if the new columns exist by running a simple query
-            db.session.execute(db.text("SELECT is_reviewed FROM questionnaire_response LIMIT 1"))
-        except Exception:
-            # Column doesn't exist, add it
-            try:
-                db.session.execute(db.text("ALTER TABLE questionnaire_response ADD COLUMN is_reviewed BOOLEAN DEFAULT 0"))
-                db.session.commit()
-                print("Added is_reviewed column to questionnaire_response table")
-            except Exception as e:
-                print(f"Could not add is_reviewed column: {e}")
-        
-        try:
-            # Test if score column exists
-            db.session.execute(db.text("SELECT score FROM questionnaire_response LIMIT 1"))
-        except Exception:
-            # Column doesn't exist, add it
-            try:
-                db.session.execute(db.text("ALTER TABLE questionnaire_response ADD COLUMN score INTEGER DEFAULT 0"))
-                db.session.commit()
-                print("Added score column to questionnaire_response table")
-            except Exception as e:
-                print(f"Could not add score column: {e}")
-        
-        # Check if LeadComment table has the new created_at column
-        try:
-            db.session.execute(db.text("SELECT created_at FROM lead_comment LIMIT 1"))
-        except Exception:
-            try:
-                db.session.execute(db.text("ALTER TABLE lead_comment ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP"))
-                db.session.commit()
-                print("Added created_at column to lead_comment table")
-            except Exception as e:
-                print(f"Could not add created_at column: {e}")
-        
-        # Add is_read column if it doesn't exist
-        try:
-            db.session.execute(db.text("SELECT is_read FROM lead_comment LIMIT 1"))
-            print("Note: is_read column already exists")
-        except Exception:
-            # Column doesn't exist, add it
-            try:
-                db.session.execute(db.text("ALTER TABLE lead_comment ADD COLUMN is_read BOOLEAN DEFAULT 0"))
-                db.session.commit()
-                print("Added is_read column to lead_comment table")
-            except Exception as e:
-                print(f"Could not add is_read column: {e}")
-                pass
-        
-        print("Database initialized successfully!")
+            db.create_all()
+            print("✅ Database tables initialized")
+        except Exception as e:
+            print(f"❌ Error initializing database: {e}")
+            
+        # Ensure default admin user exists
+        admin_user = User.query.filter_by(username='admin').first()
+        if not admin_user:
+            print("Creating default admin user...")
+            admin = User(
+                username='admin',
+                email='admin@securesphere.com',
+                role='superuser',
+                organization='SecureSphere Inc.',
+                first_name='System',
+                last_name='Administrator'
+            )
+            admin.set_password('AdminPass123')
+            db.session.add(admin)
+            db.session.commit()
+            print("✅ Default admin user created")
 
 def calculate_score_for_answer(question, answer):
     """Calculate score for a specific question-answer pair based on CSV data"""
@@ -356,36 +463,72 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    # Get invitation token from URL
+    token = request.args.get('token')
+    invitation = None
+    
+    if token:
+        invitation = InvitationToken.query.filter_by(token=token, is_used=False).first()
+        if not invitation or invitation.is_expired():
+            flash('Invalid or expired invitation link.')
+            return redirect(url_for('login'))
+    else:
+        flash('Registration requires a valid invitation.')
+        return redirect(url_for('login'))
+    
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        role = request.form['role']
-        organization = request.form.get('organization')
+        organization = request.form.get('organization', '')
+        
+        # Validate invitation token
+        if not invitation:
+            flash('Registration requires a valid invitation.')
+            return redirect(url_for('login'))
+        
+        # Ensure email matches invitation
+        if email != invitation.email:
+            flash('Email must match the invitation.')
+            return redirect(url_for('register', token=token))
+        
         # Server-side validation
-        if not username or not email or not password or not role:
+        if not username or not email or not password:
             flash('Please fill in all fields.')
-            return redirect(url_for('register'))
-        if role == 'client' and not organization:
-            flash('Organization name required for client.')
-            return redirect(url_for('register'))
+            return redirect(url_for('register', token=token))
+        
         if User.query.filter_by(username=username).first():
             flash('Username already exists.')
-            return redirect(url_for('register'))
+            return redirect(url_for('register', token=token))
+        
         import re
         if not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
             flash('Invalid email format.')
-            return redirect(url_for('register'))
+            return redirect(url_for('register', token=token))
+        
         if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password) or not re.search(r'\d', password):
             flash('Password must be at least 8 characters and include uppercase, lowercase, and number.')
-            return redirect(url_for('register'))
-        hash_pwd = generate_password_hash(password)
-        user = User(username=username, email=email, password=hash_pwd, role=role, organization=organization)
+            return redirect(url_for('register', token=token))
+        
+        # Create user with invitation details
+        user = User(
+            username=username, 
+            email=email, 
+            role=invitation.role,  # Use role from invitation
+            organization=organization or invitation.organization
+        )
+        user.set_password(password)
         db.session.add(user)
+        
+        # Mark invitation as used
+        invitation.is_used = True
+        invitation.used_at = datetime.now(timezone.utc)
+        
         db.session.commit()
         flash('Registration successful. Please login.')
         return redirect(url_for('login'))
-    return render_template('register.html')
+    
+    return render_template('register.html', invitation=invitation)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -393,11 +536,13 @@ def login():
         username = request.form['username']
         password = request.form['password']
         user = User.query.filter_by(username=username).first()
-        if not user or not check_password_hash(user.password, password):
+        if not user or not user.check_password(password):
             flash('Invalid credentials.')
             return redirect(url_for('login'))
         session['user_id'] = user.id
         session['role'] = user.role
+        user.last_login = datetime.now(timezone.utc)
+        db.session.commit()
         return redirect(url_for('dashboard'))
     return render_template('login.html')
 
@@ -431,6 +576,23 @@ def dashboard():
             total_sections = len(SECTION_IDS)
             completed_sections_count = len(completed_sections)
             
+            # Check for rejected questions that need client attention
+            rejected_responses = QuestionnaireResponse.query.filter_by(
+                product_id=product.id, user_id=user_id, needs_client_response=True
+            ).all()
+            rejected_count = len(rejected_responses)
+            
+            # If there are rejected questions, the assessment status should reflect this
+            if rejected_count > 0:
+                status_record.status = 'needs_client_response'
+            elif completed_sections_count == total_sections and not rejected_count:
+                # Check if all questions are reviewed
+                all_reviewed = all(r.is_reviewed for r in responses)
+                if all_reviewed:
+                    status_record.status = 'completed'
+                else:
+                    status_record.status = 'under_review'
+            
             # Find next section to continue
             next_section_idx = 0
             for i, section in enumerate(SECTION_IDS):
@@ -460,7 +622,8 @@ def dashboard():
                 'answered_questions': status_record.questions_completed,
                 'total_questions': status_record.total_questions,
                 'overall_score': round(overall_percentage, 1),
-                'last_updated': status_record.last_updated
+                'last_updated': status_record.last_updated,
+                'rejected_count': rejected_count
             }
             products_with_status.append(product_info)
         
@@ -469,16 +632,20 @@ def dashboard():
         
         return render_template('dashboard_client.html', products=products_with_status, unread_comments=unread_comments)
     elif role == 'lead':
-        # Get all responses with user and product information
+        # Get all responses with user and product information - only for completed assessments
         resps = db.session.query(QuestionnaireResponse, User, Product).join(
             User, QuestionnaireResponse.user_id == User.id
         ).join(
             Product, QuestionnaireResponse.product_id == Product.id
         ).all()
         
-        # Organize responses by client and product
+        # Organize responses by client and product - filter for complete assessments only
         clients_data = {}
         for resp, user, product in resps:
+            # Check if this product's assessment is complete for this user
+            if not is_assessment_complete(product.id, user.id):
+                continue  # Skip incomplete assessments
+                
             if user.id not in clients_data:
                 clients_data[user.id] = {
                     'user': user,
@@ -647,8 +814,10 @@ def fill_questionnaire_section(product_id, section_idx):
                 section=section_name,
                 question=q['question'],
                 answer=answer,
-                comment=comment,
-                evidence_path=evidence_path
+                client_comment=comment,
+                evidence_path=evidence_path,
+                is_reviewed=False,  # Reset review status for new/updated responses
+                needs_client_response=False  # Reset the client response flag when they respond
             )
             db.session.add(resp)
         db.session.commit()
@@ -761,7 +930,7 @@ def client_reply_comment(comment_id):
             original_response = QuestionnaireResponse.query.get(parent_comment.response_id)
             if original_response:
                 original_response.evidence_path = evidence_path
-                original_response.comment = reply_text
+                original_response.client_comment = reply_text
         
         db.session.commit()
         flash('Reply sent to lead successfully.')
@@ -797,6 +966,9 @@ def lead_reply_comment(comment_id):
             original_response = QuestionnaireResponse.query.get(parent_comment.response_id)
             if original_response:
                 original_response.is_reviewed = False  # Allow client to modify
+                # For rejected responses, ensure they're marked for client attention
+                if status == 'rejected':
+                    original_response.needs_client_response = True
         
         db.session.commit()
         flash('Reply sent to client successfully.')
@@ -824,7 +996,11 @@ def review_questionnaire(response_id):
         
         # Mark response as reviewed (with safety check)
         try:
-            resp.is_reviewed = True
+            if status == 'rejected':
+                resp.is_reviewed = False  # Allow client to modify rejected responses
+                resp.needs_client_response = True  # Mark for client attention
+            else:
+                resp.is_reviewed = True
         except Exception:
             # If is_reviewed column doesn't exist yet, skip setting it
             pass
@@ -1117,7 +1293,112 @@ def api_all_scores():
     
     return jsonify(all_scores)
 
+@app.route('/admin/invite_user', methods=['GET', 'POST'])
+@login_required('superuser')
+def invite_user():
+    if request.method == 'POST':
+        email = request.form['email']
+        role = request.form['role']
+        organization = request.form.get('organization', '')
+        
+        # Validate inputs
+        if not email or not role:
+            flash('Email and role are required.')
+            return redirect(url_for('invite_user'))
+        
+        if role not in ['client', 'lead']:
+            flash('Invalid role. Must be client or lead.')
+            return redirect(url_for('invite_user'))
+        
+        # Check if user already exists
+        if User.query.filter_by(email=email).first():
+            flash('User with this email already exists.')
+            return redirect(url_for('invite_user'))
+        
+        # Check if there's already a pending invitation
+        existing_invitation = InvitationToken.query.filter_by(email=email, is_used=False).first()
+        if existing_invitation and not existing_invitation.is_expired():
+            flash('There is already a pending invitation for this email.')
+            return redirect(url_for('invite_user'))
+        
+        # Generate invitation token
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=7)  # 7 days to accept
+        
+        invitation = InvitationToken(
+            token=token,
+            email=email,
+            role=role,
+            organization=organization,
+            invited_by=session['user_id'],
+            expires_at=expires_at
+        )
+        
+        db.session.add(invitation)
+        db.session.commit()
+        
+        # Generate invitation link
+        invitation_link = url_for('register', token=token, _external=True)
+        
+        flash(f'Invitation sent! Registration link: {invitation_link}')
+        return redirect(url_for('invite_user'))
+    
+    return render_template('admin_invite_user.html')
+
+@app.route('/admin/manage_users')
+@login_required('superuser')
+def manage_users():
+    users = User.query.order_by(User.created_at.desc()).all()
+    pending_invitations = InvitationToken.query.filter_by(is_used=False).order_by(InvitationToken.created_at.desc()).all()
+    return render_template('admin_manage_users.html', users=users, pending_invitations=pending_invitations)
+
+@app.route('/admin/create_lead', methods=['POST'])
+@login_required('superuser')
+def create_lead():
+    username = request.form['username']
+    email = request.form['email']
+    password = request.form['password']
+    organization = request.form.get('organization', '')
+    
+    # Validate inputs
+    if not username or not email or not password:
+        flash('Username, email, and password are required.')
+        return redirect(url_for('manage_users'))
+    
+    if User.query.filter_by(username=username).first():
+        flash('Username already exists.')
+        return redirect(url_for('manage_users'))
+    
+    if User.query.filter_by(email=email).first():
+        flash('Email already exists.')
+        return redirect(url_for('manage_users'))
+    
+    # Create lead user
+    user = User(
+        username=username,
+        email=email,
+        role='lead',
+        organization=organization
+    )
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+    
+    flash(f'Lead user {username} created successfully. Password: {password}')
+    return redirect(url_for('manage_users'))
+
+@app.route('/admin/revoke_invitation/<int:invitation_id>')
+@login_required('superuser')
+def revoke_invitation(invitation_id):
+    invitation = InvitationToken.query.get_or_404(invitation_id)
+    invitation.is_used = True  # Mark as used to effectively revoke it
+    db.session.commit()
+    flash('Invitation revoked successfully.')
+    return redirect(url_for('manage_users'))
+
 if __name__ == '__main__':
-    os.makedirs('static/uploads', exist_ok=True)
+    print("🚀 Starting SecureSphere Application")
+    print("Initializing database...")
     init_database()
-    app.run(debug=True, port=5001)
+    print("✅ Application ready")
+    app.run(debug=True, port=5001, host='0.0.0.0')
