@@ -30,7 +30,7 @@
                                         <span class="badge bg-primary">{{ response.section }}</span>
                                     </div>
                                 </div>
-                                
+
                                 <div class="response-detail-item mb-3">
                                     <label class="form-label fw-semibold text-primary">
                                         <i class="bi bi-question-circle me-2"></i>Question:
@@ -39,7 +39,7 @@
                                         {{ response.question }}
                                     </div>
                                 </div>
-                                
+
                                 <div class="response-detail-item mb-3">
                                     <label class="form-label fw-semibold text-primary">
                                         <i class="bi bi-check-circle me-2"></i>Client Answer:
@@ -47,15 +47,15 @@
                                     <div class="detail-content d-flex align-items-center">
                                         <span class="badge bg-success me-2">{{ response.answer }}</span>
                                         {% if response.evidence_path %}
-                                            <a href="/{{ response.evidence_path }}" target="_blank" 
-                                               class="btn btn-link btn-sm p-0 text-decoration-none" 
+                                            <a href="/{{ response.evidence_path }}" target="_blank"
+                                               class="btn btn-link btn-sm p-0 text-decoration-none"
                                                title="View Evidence File">
                                                 <i class="bi bi-paperclip text-primary"></i>
                                             </a>
                                         {% endif %}
                                     </div>
                                 </div>
-                                
+
                                 {% if response.client_comment %}
                                 <div class="response-detail-item mb-3">
                                     <label class="form-label fw-semibold text-primary">
@@ -69,7 +69,7 @@
                             </div>
                         </div>
                     </div>
-                    
+
                     <div class="col-md-6">
                         <div class="card bg-light h-100">
                             <div class="card-header">
@@ -83,20 +83,20 @@
                                         <label for="lead_comment" class="form-label fw-semibold text-primary">
                                             <i class="bi bi-chat-text me-2"></i>Review Comments:
                                         </label>
-                                        <textarea name="lead_comment" id="lead_comment" class="form-control" 
+                                        <textarea name="lead_comment" id="lead_comment" class="form-control"
                                                   rows="4" placeholder="Add your review comments, feedback, or request additional information...">{{ response.client_comment }}</textarea>
                                         <div class="form-text">
                                             Provide constructive feedback or request clarification if needed.
                                         </div>
                                     </div>
-                                    
+
                                     <div class="mb-4">
                                         <label class="form-label fw-semibold text-primary mb-3">
                                             <i class="bi bi-clipboard-check me-2"></i>Review Status:
                                         </label>
                                         <div class="review-status-options">
                                             <div class="form-check status-option mb-3">
-                                                <input class="form-check-input" type="radio" name="review_status" 
+                                                <input class="form-check-input" type="radio" name="review_status"
                                                        id="approved" value="approved" checked onchange="handleStatusChange()">
                                                 <label class="form-check-label status-label" for="approved">
                                                     <div class="status-header">
@@ -108,9 +108,9 @@
                                                     </div>
                                                 </label>
                                             </div>
-                                            
+
                                             <div class="form-check status-option mb-3">
-                                                <input class="form-check-input" type="radio" name="review_status" 
+                                                <input class="form-check-input" type="radio" name="review_status"
                                                        id="needs_revision" value="needs_revision" onchange="handleStatusChange()">
                                                 <label class="form-check-label status-label" for="needs_revision">
                                                     <div class="status-header">
@@ -122,9 +122,9 @@
                                                     </div>
                                                 </label>
                                             </div>
-                                            
+
                                             <div class="form-check status-option mb-3">
-                                                <input class="form-check-input" type="radio" name="review_status" 
+                                                <input class="form-check-input" type="radio" name="review_status"
                                                        id="rejected" value="rejected" onchange="handleStatusChange()">
                                                 <label class="form-check-label status-label" for="rejected">
                                                     <div class="status-header">
@@ -138,7 +138,7 @@
                                             </div>
                                         </div>
                                     </div>
-                                    
+
                                     <div class="d-grid gap-2">
                                         <button type="submit" class="btn btn-gradient-primary">
                                             <i class="bi bi-check-lg me-2"></i>Submit Review
@@ -161,7 +161,7 @@
 function handleStatusChange() {
     const status = document.querySelector('input[name="review_status"]:checked').value;
     const commentTextarea = document.getElementById('lead_comment');
-    
+
     // Update placeholder based on status
     if (status === 'approved') {
         commentTextarea.placeholder = 'Add approval comments (optional)...';
@@ -175,18 +175,18 @@ function handleStatusChange() {
 document.getElementById('reviewForm').addEventListener('submit', function(e) {
     const comment = document.getElementById('lead_comment').value.trim();
     const status = document.querySelector('input[name="review_status"]:checked').value;
-    
+
     if (!comment && (status === 'needs_revision' || status === 'rejected')) {
         e.preventDefault();
         alert('Please add review comments for revision or rejection.');
         document.getElementById('lead_comment').focus();
         return;
     }
-    
+
     // Show confirmation with specific behavior explanation
     const statusText = document.querySelector(`label[for="${status}"] .status-title`).textContent.trim();
     let confirmMessage = `Are you sure you want to submit this review with status: ${statusText}?\n\n`;
-    
+
     if (status === 'approved') {
         confirmMessage += 'This will freeze the client\'s answer and they cannot modify it.';
     } else if (status === 'needs_revision') {
@@ -194,7 +194,7 @@ document.getElementById('reviewForm').addEventListener('submit', function(e) {
     } else if (status === 'rejected') {
         confirmMessage += 'The client will need to re-answer the entire question with new evidence.';
     }
-    
+
     if (!confirm(confirmMessage)) {
         e.preventDefault();
     }

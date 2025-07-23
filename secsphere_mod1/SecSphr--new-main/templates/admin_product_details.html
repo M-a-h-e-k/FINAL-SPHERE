@@ -25,7 +25,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="card stat-card text-center">
         <div class="card-body">
             <div class="row align-items-center">
@@ -39,7 +39,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="card stat-card text-center">
         <div class="card-body">
             <div class="row align-items-center">
@@ -208,23 +208,23 @@
 function filterResponses() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const sectionFilter = document.getElementById('sectionFilter').value;
-    
+
     const rows = document.querySelectorAll('.response-row');
-    
+
     rows.forEach(row => {
         const text = row.textContent.toLowerCase();
         const section = row.getAttribute('data-section');
-        
+
         let show = true;
-        
+
         if (searchTerm && !text.includes(searchTerm)) {
             show = false;
         }
-        
+
         if (sectionFilter && section !== sectionFilter) {
             show = false;
         }
-        
+
         row.style.display = show ? '' : 'none';
     });
 }

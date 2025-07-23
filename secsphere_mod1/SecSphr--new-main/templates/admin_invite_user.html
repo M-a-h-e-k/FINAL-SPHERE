@@ -11,7 +11,7 @@
         </h1>
         <p class="lead mb-0">Send invitations to clients and lead reviewers</p>
     </div>
-    
+
     <div class="row justify-content-center">
         <div class="col-md-8">
             <div class="card shadow">
@@ -25,7 +25,7 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input type="email" class="form-control" id="email" name="email" 
+                                    <input type="email" class="form-control" id="email" name="email"
                                            placeholder="user@example.com" required>
                                     <label for="email">Email Address</label>
                                 </div>
@@ -42,11 +42,11 @@
                             </div>
                         </div>
                         <div class="form-floating mb-3">
-                            <input type="text" class="form-control" id="organization" name="organization" 
+                            <input type="text" class="form-control" id="organization" name="organization"
                                    placeholder="Organization Name">
                             <label for="organization">Organization (Optional)</label>
                         </div>
-                        
+
                         <div class="alert alert-info">
                             <i class="bi bi-info-circle me-2"></i>
                             <strong>Email Invitation Process:</strong>
@@ -57,12 +57,12 @@
                                 <li><strong>Role Assignment:</strong> Users will be automatically assigned the selected role</li>
                             </ul>
                         </div>
-                        
+
                         <div class="alert alert-warning">
                             <i class="bi bi-exclamation-triangle me-2"></i>
                             <strong>Email Configuration:</strong> Ensure email settings are configured in environment variables for automatic email delivery. If not configured, a registration link will be provided manually.
                         </div>
-                        
+
                         <div class="d-grid">
                             <button type="submit" class="btn btn-primary btn-lg">
                                 <i class="bi bi-envelope me-2"></i>Send Invitation Email
@@ -71,7 +71,7 @@
                     </form>
                 </div>
             </div>
-            
+
             <!-- Create Lead Section -->
             <div class="card shadow mt-4">
                 <div class="card-header bg-success text-white">
@@ -84,14 +84,14 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="lead_username" name="username" 
+                                    <input type="text" class="form-control" id="lead_username" name="username"
                                            placeholder="username" required>
                                     <label for="lead_username">Username</label>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input type="email" class="form-control" id="lead_email" name="email" 
+                                    <input type="email" class="form-control" id="lead_email" name="email"
                                            placeholder="lead@example.com" required>
                                     <label for="lead_email">Email Address</label>
                                 </div>
@@ -100,25 +100,25 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input type="password" class="form-control" id="lead_password" name="password" 
+                                    <input type="password" class="form-control" id="lead_password" name="password"
                                            placeholder="password" required>
                                     <label for="lead_password">Password</label>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <input type="text" class="form-control" id="lead_organization" name="organization" 
+                                    <input type="text" class="form-control" id="lead_organization" name="organization"
                                            placeholder="Organization Name">
                                     <label for="lead_organization">Organization (Optional)</label>
                                 </div>
                             </div>
                         </div>
-                        
+
                         <div class="alert alert-warning">
                             <i class="bi bi-exclamation-triangle me-2"></i>
                             Lead reviewers will be created immediately with the provided credentials.
                         </div>
-                        
+
                         <div class="d-grid">
                             <button type="submit" class="btn btn-success">
                                 <i class="bi bi-person-check me-2"></i>Create Lead Reviewer
@@ -127,7 +127,7 @@
                     </form>
                 </div>
             </div>
-            
+
             <div class="text-center mt-4">
                 <a href="{{ url_for('manage_users') }}" class="btn btn-outline-secondary">
                     <i class="bi bi-people me-2"></i>Manage Users

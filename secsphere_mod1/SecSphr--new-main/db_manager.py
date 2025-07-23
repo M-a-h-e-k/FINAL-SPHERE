@@ -15,10 +15,10 @@ def backup_database():
     if not os.path.exists(db_path):
         print("❌ Database not found")
         return False
-    
+
     timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
     backup_path = f"instance/backup_{timestamp}.db"
-    
+
     try:
         shutil.copy2(db_path, backup_path)
         print(f"✅ Database backed up to: {backup_path}")
@@ -31,15 +31,15 @@ def show_stats():
     """Display database statistics"""
     print("📊 SecureSphere Database Statistics")
     print("=" * 40)
-    
+
     with app.app_context():
         try:
             total_users = User.query.count()
             total_products = Product.query.count()
-            
+
             print(f"👥 Users: {total_users}")
             print(f"📦 Products: {total_products}")
-            
+
         except Exception as e:
             print(f"❌ Error: {e}")
 

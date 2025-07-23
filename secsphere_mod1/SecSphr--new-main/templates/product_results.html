@@ -73,9 +73,9 @@
         <div class="section-navigation mb-4">
             <nav class="nav nav-pills nav-fill">
                 {% for section_name in sections.keys() %}
-                    <button class="nav-link {% if loop.first %}active{% endif %}" 
-                            data-bs-toggle="pill" 
-                            data-bs-target="#section-{{ loop.index0 }}" 
+                    <button class="nav-link {% if loop.first %}active{% endif %}"
+                            data-bs-toggle="pill"
+                            data-bs-target="#section-{{ loop.index0 }}"
                             type="button">
                         <i class="bi bi-shield-shaded me-2"></i>
                         {{ section_name }}
@@ -88,9 +88,9 @@
         <!-- Section Content -->
         <div class="tab-content" id="sectionsContent">
             {% for section_name, section_responses in sections.items() %}
-                <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+                <div class="tab-pane fade {% if loop.first %}show active{% endif %}"
                      id="section-{{ loop.index0 }}">
-                    
+
                     <!-- Section Header -->
                     <div class="section-header-card mb-4">
                         <div class="row align-items-center">
@@ -145,15 +145,15 @@
                                         {% endif %}
                                     </div>
                                 </div>
-                                
+
                                 <div class="question-content">
                                     <h6 class="question-text">{{ resp.question }}</h6>
-                                    
+
                                     <div class="answer-section">
                                         <div class="answer-label">Your Answer:</div>
                                         <div class="answer-value">{{ resp.answer }}</div>
                                     </div>
-                                    
+
                                     {% if resp.client_comment %}
                                         <div class="comment-section">
                                             <div class="comment-label">
@@ -162,20 +162,20 @@
                                             <div class="comment-value">{{ resp.client_comment }}</div>
                                         </div>
                                     {% endif %}
-                                    
+
                                     {% if resp.evidence_path %}
                                         <div class="evidence-section">
                                             <div class="evidence-label">
                                                 <i class="bi bi-paperclip me-1"></i>Evidence:
                                             </div>
-                                            <a href="/{{ resp.evidence_path }}" target="_blank" 
+                                            <a href="/{{ resp.evidence_path }}" target="_blank"
                                                class="evidence-link">
                                                 <i class="bi bi-file-earmark"></i>
                                                 View Attachment
                                             </a>
                                         </div>
                                     {% endif %}
-                                    
+
                                     {% if lead_comment and lead_comment.comment %}
                                         <div class="reviewer-feedback">
                                             <div class="feedback-label">
@@ -210,7 +210,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const responses = {{ responses | tojson }};
     const sections = {};
-    
+
     // Group responses by section
     responses.forEach(resp => {
         if (!sections[resp.section]) {
@@ -218,37 +218,37 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         sections[resp.section].push(resp);
     });
-    
+
     // Calculate section scores
     let totalScore = 0;
     let totalQuestions = 0;
     const sectionCount = Object.keys(sections).length;
-    
+
     Object.keys(sections).forEach(sectionName => {
         const sectionResponses = sections[sectionName];
         const sectionScore = calculateSectionScore(sectionResponses);
-        
+
         // Update section score display
         const scoreElement = document.querySelector(`[data-section="${sectionName}"]`);
         if (scoreElement) {
             scoreElement.textContent = sectionScore + '%';
         }
-        
+
         totalScore += sectionScore;
         totalQuestions += sectionResponses.length;
     });
-    
+
     // Update overall metrics
     const overallScore = sectionCount > 0 ? Math.round(totalScore / sectionCount) : 0;
     document.getElementById('overallScore').textContent = overallScore + '%';
     document.getElementById('sectionsCount').textContent = sectionCount;
-    document.getElementById('completionRate').textContent = 
+    document.getElementById('completionRate').textContent =
         totalQuestions > 0 ? Math.round((responses.length / totalQuestions) * 100) + '%' : '0%';
 });
 
 function calculateSectionScore(responses) {
     if (responses.length === 0) return 0;
-    
+
     let approvedCount = 0;
     responses.forEach(resp => {
         // Check if response has approved status
@@ -258,7 +258,7 @@ function calculateSectionScore(responses) {
             }
         }
     });
-    
+
     return Math.round((approvedCount / responses.length) * 100);
 }
 </script>

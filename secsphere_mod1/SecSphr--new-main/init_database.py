@@ -24,7 +24,7 @@ def create_database():
 def create_sample_users():
     """Create only essential system user"""
     print("Creating essential system user...")
-    
+
     with app.app_context():
         try:
             # Only create admin if it doesn't exist
@@ -43,11 +43,11 @@ def create_sample_users():
                 print(f"✅ Created admin user for system management")
             else:
                 print(f"ℹ️  Admin user already exists")
-            
+
             db.session.commit()
             print("✅ Essential user created successfully")
             return True
-            
+
         except Exception as e:
             print(f"❌ Error creating admin user: {e}")
             db.session.rollback()
@@ -56,7 +56,7 @@ def create_sample_users():
 def create_system_settings():
     """Create system settings for the application"""
     print("Creating system settings...")
-    
+
     settings_data = [
         {
             'key': 'app_name',
@@ -94,7 +94,7 @@ def create_system_settings():
             'description': 'Enable maintenance mode'
         }
     ]
-    
+
     with app.app_context():
         try:
             for setting_data in settings_data:
@@ -109,11 +109,11 @@ def create_system_settings():
                     print(f"✅ Created setting: {setting_data['key']}")
                 else:
                     print(f"ℹ️  Setting already exists: {setting_data['key']}")
-            
+
             db.session.commit()
             print("✅ System settings created successfully")
             return True
-            
+
         except Exception as e:
             print(f"❌ Error creating system settings: {e}")
             db.session.rollback()
@@ -127,44 +127,44 @@ def create_sample_products():
 def verify_database():
     """Verify that the database was created correctly"""
     print("Verifying database integrity...")
-    
+
     with app.app_context():
         try:
             # Check table creation using inspector
             from sqlalchemy import inspect
             inspector = inspect(db.engine)
             tables = inspector.get_table_names()
-            
+
             expected_tables = [
-                'users', 'products', 'product_statuses', 
-                'questionnaire_responses', 'lead_comments', 
+                'users', 'products', 'product_statuses',
+                'questionnaire_responses', 'lead_comments',
                 'score_history', 'system_settings', 'invitation_tokens'
             ]
-            
+
             for table in expected_tables:
                 if table in tables:
                     print(f"✅ Table exists: {table}")
                 else:
                     print(f"❌ Table missing: {table}")
                     return False
-            
+
             # Check sample data
             user_count = User.query.count()
             product_count = Product.query.count()
             settings_count = SystemSettings.query.count()
-            
+
             print(f"📊 Database Statistics:")
             print(f"   • Users: {user_count}")
             print(f"   • Products: {product_count}")
             print(f"   • System Settings: {settings_count}")
-            
+
             if user_count > 0 and settings_count > 0:
                 print("✅ Database verification successful")
                 return True
             else:
                 print("❌ Database verification failed - missing data")
                 return False
-                
+
         except Exception as e:
             print(f"❌ Error verifying database: {e}")
             return False
@@ -188,40 +188,40 @@ def main():
     """Main initialization function"""
     print("🚀 Starting SecureSphere Database Initialization")
     print("=" * 60)
-    
+
     # Ensure instance directory exists
     os.makedirs('instance', exist_ok=True)
-    
+
     # Backup existing database
     if not backup_existing_database():
         print("❌ Failed to backup existing database")
         return False
-    
+
     # Create database
     if not create_database():
         print("❌ Database initialization failed")
         return False
-    
+
     # Create sample users
     if not create_sample_users():
         print("❌ User creation failed")
         return False
-    
+
     # Create system settings
     if not create_system_settings():
         print("❌ System settings creation failed")
         return False
-    
+
     # Create sample products
     if not create_sample_products():
         print("❌ Product creation failed")
         return False
-    
+
     # Verify database
     if not verify_database():
         print("❌ Database verification failed")
         return False
-    
+
     print("=" * 60)
     print("🎉 Database initialization completed successfully!")
     print("\n📋 Admin Login Credentials:")
@@ -229,7 +229,7 @@ def main():
     print("\n⚠️  Please change admin password in production!")
     print("💡 Users and products will be created through the admin interface")
     print("=" * 60)
-    
+
     return True
 
 if __name__ == "__main__":

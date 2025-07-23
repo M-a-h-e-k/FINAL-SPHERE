@@ -16,23 +16,23 @@
             <div class="card-body">
                 <form method="post" id="addProductForm">
                     <div class="form-floating mb-4">
-                        <input type="text" name="name" class="form-control" id="productName" 
+                        <input type="text" name="name" class="form-control" id="productName"
                                placeholder="Product Name" required>
                         <label for="productName">
                             <i class="bi bi-box-seam me-2"></i>Product Name
                         </label>
                         <div class="invalid-feedback">Please enter a product name.</div>
                     </div>
-                    
+
                     <div class="form-floating mb-4">
-                        <input type="url" name="product_url" class="form-control" id="productUrl" 
+                        <input type="url" name="product_url" class="form-control" id="productUrl"
                                placeholder="Product URL" required>
                         <label for="productUrl">
                             <i class="bi bi-link-45deg me-2"></i>Product URL *
                         </label>
                         <div class="invalid-feedback">Please enter a valid product URL.</div>
                     </div>
-                    
+
                     <div class="form-floating mb-4">
                         <select name="programming_language" class="form-select" id="programmingLanguage" required>
                             <option value="">Select Programming Language</option>
@@ -58,7 +58,7 @@
                         </label>
                         <div class="invalid-feedback">Please select a programming language.</div>
                     </div>
-                    
+
                     <div class="form-floating mb-4">
                         <select name="cloud_platform" class="form-select" id="cloudPlatform" required>
                             <option value="">Select Cloud Platform</option>
@@ -82,15 +82,15 @@
                         </label>
                         <div class="invalid-feedback">Please select a cloud platform.</div>
                     </div>
-                    
+
                     <div class="form-floating mb-4" id="cloudPlatformOtherDiv" style="display: none;">
-                        <input type="text" name="cloud_platform_other" class="form-control" id="cloudPlatformOther" 
+                        <input type="text" name="cloud_platform_other" class="form-control" id="cloudPlatformOther"
                                placeholder="Specify other cloud platform">
                         <label for="cloudPlatformOther">
                             <i class="bi bi-cloud me-2"></i>Specify Cloud Platform
                         </label>
                     </div>
-                    
+
                     <div class="form-floating mb-4">
                         <select name="cicd_platform" class="form-select" id="cicdPlatform" required>
                             <option value="">Select CI/CD Platform</option>
@@ -114,25 +114,25 @@
                         </label>
                         <div class="invalid-feedback">Please select a CI/CD platform.</div>
                     </div>
-                    
+
                     <div class="form-floating mb-4">
-                        <textarea class="form-control" name="additional_details" id="additionalDetails" 
+                        <textarea class="form-control" name="additional_details" id="additionalDetails"
                                   placeholder="Additional Details" rows="3" style="height: 100px;"></textarea>
                         <label for="additionalDetails">
                             <i class="bi bi-file-text me-2"></i>Additional Details (Optional)
                         </label>
                     </div>
-                    
+
                     <div class="alert alert-info">
                         <i class="bi bi-info-circle me-2"></i>
                         <strong>What happens next?</strong><br>
                         After creating your product, you'll be guided through a comprehensive security questionnaire.
                     </div>
-                    
+
                     <button type="submit" class="btn btn-gradient-primary w-100 rounded-pill py-3 mb-3">
                         <i class="bi bi-plus-lg me-2"></i>Create Product & Start Assessment
                     </button>
-                    
+
                     <div class="text-center">
                         <a href="{{ url_for('dashboard') }}" class="link-primary">
                             <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
@@ -147,7 +147,7 @@
 <script>
 document.getElementById('addProductForm').addEventListener('submit', function(e) {
     const productName = document.getElementById('productName');
-    
+
     if (!productName.value.trim()) {
         e.preventDefault();
         productName.classList.add('is-invalid');
@@ -168,7 +168,7 @@ document.getElementById('productName').addEventListener('input', function() {
 document.getElementById('cloudPlatform').addEventListener('change', function() {
     const otherDiv = document.getElementById('cloudPlatformOtherDiv');
     const otherInput = document.getElementById('cloudPlatformOther');
-    
+
     if (this.value === 'Other') {
         otherDiv.style.display = 'block';
         otherInput.required = true;

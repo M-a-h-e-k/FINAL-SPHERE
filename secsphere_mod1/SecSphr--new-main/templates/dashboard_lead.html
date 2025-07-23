@@ -26,7 +26,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="card stat-card text-center">
         <div class="card-body">
             <div class="row align-items-center">
@@ -40,7 +40,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="card stat-card text-center">
         <div class="card-body">
             <div class="row align-items-center">
@@ -110,8 +110,8 @@
                 <!-- Client Navigation Tabs -->
                 <nav class="nav nav-tabs" id="clientTabs" role="tablist">
                     {% for client_id, client_data in clients_data.items() %}
-                    <button class="nav-link {% if loop.first %}active{% endif %}" id="client-{{ client_id }}-tab" 
-                            data-bs-toggle="tab" data-bs-target="#client-{{ client_id }}" type="button" 
+                    <button class="nav-link {% if loop.first %}active{% endif %}" id="client-{{ client_id }}-tab"
+                            data-bs-toggle="tab" data-bs-target="#client-{{ client_id }}" type="button"
                             role="tab" aria-controls="client-{{ client_id }}" aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
                         <i class="bi bi-person-circle me-2"></i>{{ client_data.user.username }}
                         <span class="badge bg-primary ms-2">{{ client_data.products|length }} products</span>
@@ -122,7 +122,7 @@
                 <!-- Client Tab Content -->
                 <div class="tab-content" id="clientTabContent">
                     {% for client_id, client_data in clients_data.items() %}
-                    <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="client-{{ client_id }}" 
+                    <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="client-{{ client_id }}"
                          role="tabpanel" aria-labelledby="client-{{ client_id }}-tab">
                         <div class="p-4">
                             <!-- Client Info Banner -->
@@ -138,8 +138,8 @@
                             {% if client_data.products|length > 1 %}
                             <nav class="nav nav-pills mb-4" id="product-nav-{{ client_id }}" role="tablist">
                                 {% for product_id, product_data in client_data.products.items() %}
-                                <button class="nav-link {% if loop.first %}active{% endif %}" id="product-{{ product_id }}-tab" 
-                                        data-bs-toggle="pill" data-bs-target="#product-{{ product_id }}" type="button" 
+                                <button class="nav-link {% if loop.first %}active{% endif %}" id="product-{{ product_id }}-tab"
+                                        data-bs-toggle="pill" data-bs-target="#product-{{ product_id }}" type="button"
                                         role="tab" aria-controls="product-{{ product_id }}" aria-selected="{% if loop.first %}true{% else %}false{% endif %}">
                                     <i class="bi bi-box-seam me-2"></i>{{ product_data.product.name }}
                                     <span class="badge bg-light text-dark ms-2">{{ product_data.responses|length }}</span>
@@ -151,9 +151,9 @@
                             <!-- Product Tab Content -->
                             <div class="tab-content" id="product-content-{{ client_id }}">
                                 {% for product_id, product_data in client_data.products.items() %}
-                                <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="product-{{ product_id }}" 
+                                <div class="tab-pane fade {% if loop.first %}show active{% endif %}" id="product-{{ product_id }}"
                                      role="tabpanel" aria-labelledby="product-{{ product_id }}-tab">
-                                    
+
                                     <!-- Section-wise Questions Layout -->
                                     {% set sections = {} %}
                                     {% for resp in product_data.responses %}
@@ -162,16 +162,16 @@
                                         {% endif %}
                                         {% set _ = sections[resp.section].append(resp) %}
                                     {% endfor %}
-                                    
+
                                     {% for section_name, section_responses in sections.items() %}
                                     <div class="section-container mb-3">
                                         <div class="card border-0 shadow-sm">
                                             <div class="card-header bg-gradient-primary text-white p-0">
-                                                <button class="btn btn-link text-white text-decoration-none w-100 text-start p-3" 
-                                                        type="button" 
-                                                        data-bs-toggle="collapse" 
-                                                        data-bs-target="#section-{{ client_id }}-{{ product_id }}-{{ loop.index0 }}" 
-                                                        aria-expanded="{% if loop.first %}true{% else %}false{% endif %}" 
+                                                <button class="btn btn-link text-white text-decoration-none w-100 text-start p-3"
+                                                        type="button"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#section-{{ client_id }}-{{ product_id }}-{{ loop.index0 }}"
+                                                        aria-expanded="{% if loop.first %}true{% else %}false{% endif %}"
                                                         aria-controls="section-{{ client_id }}-{{ product_id }}-{{ loop.index0 }}">
                                                     <div class="d-flex align-items-center justify-content-between">
                                                         <h6 class="mb-0">
@@ -239,8 +239,8 @@
                                                                 </td>
                                                                 <td>
                                                                     {% if resp.evidence_path %}
-                                                                        <a href="/{{ resp.evidence_path }}" target="_blank" 
-                                                                           class="btn btn-outline-info btn-sm" 
+                                                                        <a href="/{{ resp.evidence_path }}" target="_blank"
+                                                                           class="btn btn-outline-info btn-sm"
                                                                            title="View Evidence">
                                                                             <i class="bi bi-paperclip"></i>
                                                                         </a>
@@ -249,7 +249,7 @@
                                                                     {% endif %}
                                                                 </td>
                                                                 <td>
-                                                                    <a href="{{ url_for('review_questionnaire', response_id=resp.id) }}" 
+                                                                    <a href="{{ url_for('review_questionnaire', response_id=resp.id) }}"
                                                                        class="btn btn-outline-primary btn-sm">
                                                                         <i class="bi bi-pencil-square me-1"></i>Review
                                                                     </a>
@@ -299,27 +299,27 @@ function filterResponses() {
     const searchTerm = document.getElementById('searchInput').value.toLowerCase();
     const clientFilter = document.getElementById('clientFilter').value;
     const statusFilter = document.getElementById('statusFilter').value;
-    
+
     const questionRows = document.querySelectorAll('.section-container tbody tr');
     const sectionContainers = document.querySelectorAll('.section-container');
-    
+
     questionRows.forEach(row => {
         const text = row.textContent.toLowerCase();
         const clientId = row.closest('.tab-pane').id.replace('client-', '');
-        
+
         let show = true;
-        
+
         if (searchTerm && !text.includes(searchTerm)) {
             show = false;
         }
-        
+
         if (clientFilter && clientId !== clientFilter) {
             show = false;
         }
-        
+
         row.style.display = show ? '' : 'none';
     });
-    
+
     // Hide sections with no visible rows
     sectionContainers.forEach(section => {
         const visibleRows = section.querySelectorAll('tbody tr:not([style*="display: none"])');

@@ -25,7 +25,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="card stat-card text-center">
         <div class="card-body">
             <div class="row align-items-center">
@@ -39,7 +39,7 @@
             </div>
         </div>
     </div>
-    
+
     <div class="card stat-card text-center">
         <div class="card-body">
             <div class="row align-items-center">
@@ -117,13 +117,13 @@
                                         {% endif %}
                                     </span>
                                 </div>
-                                
+
                                 <!-- Assessment Progress -->
                                 <div class="assessment-progress mb-3">
                                     <div class="progress">
-                                        <div class="progress-bar" role="progressbar" 
+                                        <div class="progress-bar" role="progressbar"
                                              style="width: {{ product.progress_percentage }}%"
-                                             aria-valuenow="{{ product.progress_percentage }}" 
+                                             aria-valuenow="{{ product.progress_percentage }}"
                                              aria-valuemin="0" aria-valuemax="100">
                                         </div>
                                     </div>
@@ -132,7 +132,7 @@
                                         <small>{{ product.progress_percentage }}% complete</small>
                                     </div>
                                 </div>
-                                
+
                                 <!-- Stats Row -->
                                 <div class="row text-center mb-3">
                                     <div class="col-3">
@@ -160,7 +160,7 @@
                                         <small class="text-muted">{{ product.status_display }}</small>
                                     </div>
                                 </div>
-                                
+
                                 {% if product.rejected_count > 0 %}
                                 <!-- Rejected Questions Alert -->
                                 <div class="alert alert-danger mb-3">
@@ -171,14 +171,14 @@
                                     <small class="text-muted">Reviewer has rejected some responses and requires re-submission.</small>
                                 </div>
                                 {% endif %}
-                                
+
                                 <!-- Action Buttons -->
                                 <div class="d-grid gap-2">
-                                    <a href="{{ url_for('product_results', product_id=product.id) }}" 
+                                    <a href="{{ url_for('product_results', product_id=product.id) }}"
                                        class="btn btn-outline-primary rounded-pill">
                                         <i class="bi bi-bar-chart me-2"></i>View Results
                                     </a>
-                                    
+
                                     {% if product.status == 'completed' %}
                                         <button class="btn btn-success rounded-pill" disabled>
                                             <i class="bi bi-check-circle me-2"></i>Assessment Complete
@@ -192,17 +192,17 @@
                                             <i class="bi bi-eye me-2"></i>Under Review
                                         </button>
                                     {% elif product.status == 'needs_client_response' %}
-                                        <a href="{{ url_for('client_comments') }}" 
+                                        <a href="{{ url_for('client_comments') }}"
                                            class="btn btn-danger rounded-pill">
                                             <i class="bi bi-exclamation-triangle me-2"></i>Review Feedback
                                         </a>
                                     {% elif product.status == 'review_done' %}
-                                        <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}" 
+                                        <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}"
                                            class="btn btn-gradient-primary rounded-pill">
                                             <i class="bi bi-pencil me-2"></i>Address Feedback
                                         </a>
                                     {% else %}
-                                        <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}" 
+                                        <a href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=product.next_section_idx) }}"
                                            class="btn btn-gradient-primary rounded-pill">
                                             <i class="bi bi-play-circle me-2"></i>Continue Assessment
                                         </a>
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function() {
             card.style.transform = 'translateY(-2px)';
         }, index * 100);
     });
-    
+
     // Add hover effect to product cards
     const productCards = document.querySelectorAll('.product-card');
     productCards.forEach(card => {

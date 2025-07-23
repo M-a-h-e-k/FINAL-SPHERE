@@ -18,23 +18,23 @@
                     <div class="card-body">
                         <form method="post" id="loginForm" novalidate>
                             <div class="form-floating mb-3">
-                                <input type="text" name="username" class="form-control" id="username" 
+                                <input type="text" name="username" class="form-control" id="username"
                                        placeholder="Username" required>
                                 <label for="username">
                                     <i class="bi bi-person-fill me-2"></i>Username
                                 </label>
                                 <div class="invalid-feedback">Please enter your username.</div>
                             </div>
-                            
+
                             <div class="form-floating mb-3">
-                                <input type="password" name="password" class="form-control" id="password" 
+                                <input type="password" name="password" class="form-control" id="password"
                                        placeholder="Password" required minlength="6">
                                 <label for="password">
                                     <i class="bi bi-lock-fill me-2"></i>Password
                                 </label>
                                 <div class="invalid-feedback">Password required (min 6 chars).</div>
                             </div>
-                            
+
                             <div class="row mb-3">
                                 <div class="col-6">
                                     <div class="form-check">
@@ -50,11 +50,11 @@
                                     </a>
                                 </div>
                             </div>
-                            
+
                             <button type="submit" class="btn btn-gradient-primary w-100 rounded-pill py-2 mb-3">
                                 <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
                             </button>
-                            
+
                             <div class="text-center">
                                 <span class="text-muted">Don't have an account? </span>
                                 <a href="{{ url_for('register') }}" class="link-primary">Sign up</a>
@@ -83,7 +83,7 @@
                         <label for="forgot_email" class="form-label">
                             <i class="bi bi-envelope-fill me-2"></i>Email Address
                         </label>
-                        <input type="email" class="form-control" id="forgot_email" name="forgot_email" 
+                        <input type="email" class="form-control" id="forgot_email" name="forgot_email"
                                placeholder="Enter your email address" required>
                         <div class="form-text">
                             We'll send you a link to reset your password.
@@ -104,15 +104,15 @@
 document.getElementById("loginForm").addEventListener("submit", function(e) {
     let valid = true;
     this.querySelectorAll("input[required]").forEach(function(input) {
-        if (!input.value) { 
-            input.classList.add("is-invalid"); 
-            valid = false; 
+        if (!input.value) {
+            input.classList.add("is-invalid");
+            valid = false;
         } else {
             input.classList.remove("is-invalid");
         }
-        if (input.name == "password" && input.value.length < 6) { 
-            input.classList.add("is-invalid"); 
-            valid = false; 
+        if (input.name == "password" && input.value.length < 6) {
+            input.classList.add("is-invalid");
+            valid = false;
         }
     });
     if (!valid) e.preventDefault();

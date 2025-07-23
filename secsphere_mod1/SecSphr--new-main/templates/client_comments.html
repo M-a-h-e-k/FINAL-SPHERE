@@ -70,12 +70,12 @@
                             </div>
                             <div class="message-actions">
                                 {% if not comment.is_read %}
-                                    <a href="{{ url_for('mark_comment_read', comment_id=comment.id) }}" 
+                                    <a href="{{ url_for('mark_comment_read', comment_id=comment.id) }}"
                                        class="btn btn-sm btn-outline-primary">
                                         <i class="bi bi-check2"></i> Mark as Read
                                     </a>
                                 {% endif %}
-                                <button class="btn btn-sm btn-primary" 
+                                <button class="btn btn-sm btn-primary"
                                         onclick="toggleReplyForm({{ comment.id }})">
                                     <i class="bi bi-reply"></i> Reply
                                 </button>
@@ -108,7 +108,7 @@
                         <form method="post" action="{{ url_for('client_reply_comment', comment_id=comment.id) }}" enctype="multipart/form-data">
                             <div class="message-compose">
                                 <div class="compose-input">
-                                    <textarea class="form-control" name="reply" rows="3" 
+                                    <textarea class="form-control" name="reply" rows="3"
                                               placeholder="Type your reply..." required></textarea>
                                 </div>
                                 {% if comment.status in ['needs_revision', 'rejected'] %}
@@ -116,7 +116,7 @@
                                         <label class="form-label">
                                             <i class="bi bi-paperclip me-1"></i>Attach Evidence (Optional)
                                         </label>
-                                        <input type="file" class="form-control form-control-sm" name="evidence" 
+                                        <input type="file" class="form-control form-control-sm" name="evidence"
                                                accept=".csv,.txt,.pdf,.jpg,.jpeg,.png,.doc,.docx">
                                     </div>
                                 {% endif %}
@@ -124,7 +124,7 @@
                                     <button type="submit" class="btn btn-primary">
                                         <i class="bi bi-send"></i> Send Reply
                                     </button>
-                                    <button type="button" class="btn btn-outline-secondary" 
+                                    <button type="button" class="btn btn-outline-secondary"
                                             onclick="toggleReplyForm({{ comment.id }})">
                                         Cancel
                                     </button>
@@ -152,7 +152,7 @@ function toggleReplyForm(commentId) {
     if (form.style.display === 'none') {
         form.style.display = 'block';
         form.scrollIntoView({ behavior: 'smooth' });
-        
+
         // Auto-mark as read when reply is clicked
         const markReadBtn = document.querySelector(`a[href*="mark_comment_read"][href*="${commentId}"]`);
         if (markReadBtn) {
@@ -176,7 +176,7 @@ function toggleReplyForm(commentId) {
 document.addEventListener('DOMContentLoaded', function() {
     const chatMessages = document.getElementById('chatMessages');
     chatMessages.scrollTop = chatMessages.scrollHeight;
-    
+
     // Auto-mark as read after 3 seconds of viewing
     setTimeout(() => {
         const unreadButtons = document.querySelectorAll('a[href*="mark_comment_read"]');

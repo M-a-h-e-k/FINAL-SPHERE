@@ -13,7 +13,7 @@
                 </div>
                 <ul class="list-group list-group-flush">
                     {% for idx, section, done in progress %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center 
+                    <li class="list-group-item d-flex justify-content-between align-items-center
                         {% if idx == section_idx %}active{% elif done %}text-success{% else %}text-muted{% endif %}">
                         <span>
                             <i class="bi bi-{% if done %}check-circle-fill{% elif idx == section_idx %}arrow-right-circle-fill{% else %}circle{% endif %} me-2"></i>
@@ -30,7 +30,7 @@
                 </ul>
                 <div class="card-footer">
                     <div class="progress mb-2">
-                        <div class="progress-bar" role="progressbar" 
+                        <div class="progress-bar" role="progressbar"
                              style="width: {{ ((section_idx + 1) / total_sections * 100) | round(1) }}%">
                         </div>
                     </div>
@@ -40,7 +40,7 @@
                 </div>
             </div>
         </div>
-        
+
         <!-- Main content -->
         <div class="main-content flex-grow-1">
             <div class="card shadow-lg border-0">
@@ -63,15 +63,15 @@
                         {% set existing_response = existing_answers.get(outer_loop_index) if existing_answers else none %}
                         {% set lead_comment = existing_response.lead_comments|first if existing_response and existing_response.lead_comments else none %}
                         {% set review_status = lead_comment.status if lead_comment else 'none' %}
-                        
-                        <div class="card mb-4 question-card questionnaire-card 
+
+                        <div class="card mb-4 question-card questionnaire-card
                                   {% if review_status == 'approved' %}border-success bg-light{% elif review_status == 'needs_revision' %}border-warning{% elif review_status == 'rejected' %}border-danger{% endif %}"
                              data-review-status="{{ review_status }}">
                             <div class="card-body">
                                 <!-- Review Status Header -->
                                 {% if review_status != 'none' %}
-                                <div class="alert 
-                                          {% if review_status == 'approved' %}alert-success{% elif review_status == 'needs_revision' %}alert-warning{% elif review_status == 'rejected' %}alert-danger{% endif %} 
+                                <div class="alert
+                                          {% if review_status == 'approved' %}alert-success{% elif review_status == 'needs_revision' %}alert-warning{% elif review_status == 'rejected' %}alert-danger{% endif %}
                                           mb-3">
                                     <div class="d-flex align-items-center">
                                         <i class="bi bi-{% if review_status == 'approved' %}check-circle{% elif review_status == 'needs_revision' %}exclamation-triangle{% elif review_status == 'rejected' %}x-circle{% endif %} me-2"></i>
@@ -89,7 +89,7 @@
                                     {% endif %}
                                 </div>
                                 {% endif %}
-                                
+
                                 <div class="row">
                                     <div class="col-md-8">
                                         <div class="mb-3">
@@ -106,13 +106,13 @@
                                             {% if question.description %}
                                                 <p class="question-description text-muted mb-3">{{ question.description }}</p>
                                             {% endif %}
-                                            
+
                                             <div class="answer-options">
                                                 {% for option in question.options %}
                                                 <div class="form-check answer-option d-flex align-items-start">
-                                                    <input class="form-check-input mt-1" type="radio" 
-                                                           name="answer_{{ outer_loop_index }}" 
-                                                           id="answer_{{ outer_loop_index }}_{{ loop.index0 }}" 
+                                                    <input class="form-check-input mt-1" type="radio"
+                                                           name="answer_{{ outer_loop_index }}"
+                                                           id="answer_{{ outer_loop_index }}_{{ loop.index0 }}"
                                                            value="{{ option }}"
                                                            data-question-idx="{{ outer_loop_index }}"
                                                            data-section-idx="{{ section_idx }}"
@@ -145,8 +145,8 @@
                                                     <span class="text-danger">(Rejected - Please revise)</span>
                                                 {% endif %}
                                             </label>
-                                            <textarea class="form-control" name="comment_{{ outer_loop_index }}" 
-                                                      rows="3" 
+                                            <textarea class="form-control" name="comment_{{ outer_loop_index }}"
+                                                      rows="3"
                                                       placeholder="{% if question_status == 'needs_revision' %}Address the reviewer's feedback...{% elif question_status == 'rejected' %}Provide new information for re-submission...{% else %}Any additional information...{% endif %}"
                                                       data-question-idx="{{ outer_loop_index }}"
                                                       data-section-idx="{{ section_idx }}"
@@ -154,19 +154,19 @@
                                                       {% if question_status in ['approved', 'under_review', 'pending'] %}readonly{% endif %}
                                                       {% if question_status in ['needs_revision', 'rejected'] %}required{% endif %}>{% if existing_answers and outer_loop_index in existing_answers %}{{ existing_answers[outer_loop_index].comment or '' }}{% endif %}</textarea>
                                         </div>
-                                        
+
                                         <!-- File Upload Section -->
                                         <div class="mb-3">
                                             {% set question_status = question_review_status.get(outer_loop_index) %}
                                             {% if question_status not in ['approved', 'under_review', 'pending'] %}
                                             <div class="file-upload-container">
-                                                <input type="file" class="form-control file-input" 
-                                                       name="evidence_{{ outer_loop_index }}" 
+                                                <input type="file" class="form-control file-input"
+                                                       name="evidence_{{ outer_loop_index }}"
                                                        id="evidence_{{ outer_loop_index }}"
                                                        accept=".csv,.txt,.pdf,.jpg,.jpeg,.png,.doc,.docx"
                                                        {% if question_status in ['rejected', 'needs_revision'] %}required{% endif %}
                                                        style="display: none;">
-                                                <button type="button" class="btn btn-outline-secondary btn-sm file-upload-btn" 
+                                                <button type="button" class="btn btn-outline-secondary btn-sm file-upload-btn"
                                                         onclick="document.getElementById('evidence_{{ outer_loop_index }}').click()">
                                                     <i class="bi bi-paperclip me-1"></i>
                                                     {% if question_status in ['rejected', 'needs_revision'] %}Update Evidence{% else %}Attach File{% endif %}
@@ -179,7 +179,7 @@
                                                 {% if question_status == 'approved' %}Evidence approved & locked{% else %}Evidence under review - locked{% endif %}
                                             </div>
                                             {% endif %}
-                                            
+
                                             <!-- Show existing evidence if any -->
                                             {% if existing_response and existing_response.evidence_path %}
                                             <div class="mt-2">
@@ -191,24 +191,24 @@
                                                 </div>
                                             </div>
                                             {% endif %}
-                                            
+
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         {% endfor %}
-                        
+
                         <div class="d-flex justify-content-between mt-4">
                             {% if section_idx > 0 %}
-                            <a class="btn btn-outline-secondary rounded-pill px-4" 
+                            <a class="btn btn-outline-secondary rounded-pill px-4"
                                href="{{ url_for('fill_questionnaire_section', product_id=product.id, section_idx=section_idx-1) }}">
                                 <i class="bi bi-arrow-left me-2"></i>Previous Section
                             </a>
                             {% else %}
                             <div></div>
                             {% endif %}
-                            
+
                             <button type="submit" class="btn btn-gradient-primary rounded-pill px-4">
                                 {% if section_idx + 1 < total_sections %}
                                     Next Section <i class="bi bi-arrow-right ms-2"></i>
@@ -231,35 +231,35 @@ const QuestionnaireState = {
     getStorageKey: function(productId, sectionIdx) {
         return `questionnaire_${productId}_${sectionIdx}`;
     },
-    
+
     // Save form state to localStorage
     saveState: function(productId, sectionIdx) {
         const data = {};
-        
+
         // Save radio button selections
         document.querySelectorAll('input[type="radio"]:checked').forEach(radio => {
             data[radio.name] = radio.value;
         });
-        
+
         // Save textarea values
         document.querySelectorAll('textarea').forEach(textarea => {
             if (textarea.value.trim()) {
                 data[textarea.name] = textarea.value;
             }
         });
-        
+
         localStorage.setItem(this.getStorageKey(productId, sectionIdx), JSON.stringify(data));
     },
-    
+
     // Load form state from localStorage
     loadState: function(productId, sectionIdx) {
         const storageKey = this.getStorageKey(productId, sectionIdx);
         const savedData = localStorage.getItem(storageKey);
-        
+
         if (savedData) {
             try {
                 const data = JSON.parse(savedData);
-                
+
                 // Restore radio button selections
                 Object.keys(data).forEach(name => {
                     const value = data[name];
@@ -268,7 +268,7 @@ const QuestionnaireState = {
                         radio.checked = true;
                     }
                 });
-                
+
                 // Restore textarea values
                 Object.keys(data).forEach(name => {
                     const textarea = document.querySelector(`textarea[name="${name}"]`);
@@ -281,7 +281,7 @@ const QuestionnaireState = {
             }
         }
     },
-    
+
     // Clear state for a specific section
     clearState: function(productId, sectionIdx) {
         localStorage.removeItem(this.getStorageKey(productId, sectionIdx));
@@ -292,17 +292,17 @@ const QuestionnaireState = {
 document.addEventListener('DOMContentLoaded', function() {
     const productId = {{ product.id }};
     const sectionIdx = {{ section_idx }};
-    
+
     // Load saved state
     QuestionnaireState.loadState(productId, sectionIdx);
-    
+
     // Save state on form changes
     document.querySelectorAll('input[type="radio"], textarea').forEach(element => {
         element.addEventListener('change', function() {
             QuestionnaireState.saveState(productId, sectionIdx);
         });
     });
-    
+
     // Auto-save on text input
     document.querySelectorAll('textarea').forEach(textarea => {
         textarea.addEventListener('input', function() {
@@ -318,7 +318,7 @@ document.addEventListener('DOMContentLoaded', function() {
 document.getElementById('sectionForm').addEventListener('submit', function(e) {
     let valid = true;
     const radioGroups = {};
-    
+
     // Collect all radio button groups (excluding approved questions)
     this.querySelectorAll('input[type="radio"]:not([disabled])').forEach(function(radio) {
         const groupName = radio.name;
@@ -327,24 +327,24 @@ document.getElementById('sectionForm').addEventListener('submit', function(e) {
         }
         radioGroups[groupName].push(radio);
     });
-    
+
     // Check if each group has a selected option
     Object.keys(radioGroups).forEach(function(groupName) {
         const group = radioGroups[groupName];
         const isChecked = group.some(radio => radio.checked);
         const questionCard = group[0].closest('.question-card');
         const reviewStatus = questionCard.getAttribute('data-review-status');
-        
+
         // Skip validation for approved questions
         if (reviewStatus === 'approved') {
             return;
         }
-        
+
         if (!isChecked) {
             valid = false;
             // Highlight the question card
             questionCard.classList.add('border-danger');
-            
+
             // Add error message if not already present
             if (!questionCard.querySelector('.error-message')) {
                 const errorDiv = document.createElement('div');
@@ -360,14 +360,14 @@ document.getElementById('sectionForm').addEventListener('submit', function(e) {
                 errorMsg.remove();
             }
         }
-        
+
         // Validate required comments for revision status
         if (reviewStatus === 'needs_revision') {
             const commentTextarea = questionCard.querySelector('textarea[required]');
             if (commentTextarea && !commentTextarea.value.trim()) {
                 valid = false;
                 commentTextarea.classList.add('is-invalid');
-                
+
                 if (!questionCard.querySelector('.comment-error-message')) {
                     const errorDiv = document.createElement('div');
                     errorDiv.className = 'comment-error-message alert alert-warning mt-2';
@@ -382,7 +382,7 @@ document.getElementById('sectionForm').addEventListener('submit', function(e) {
                 }
             }
         }
-        
+
         // Validate required evidence for rejected status
         if (reviewStatus === 'rejected') {
             const fileInput = questionCard.querySelector('input[type="file"][required]');
@@ -391,7 +391,7 @@ document.getElementById('sectionForm').addEventListener('submit', function(e) {
                 const existingEvidence = questionCard.querySelector('.btn-outline-info');
                 if (!existingEvidence) {
                     valid = false;
-                    
+
                     if (!questionCard.querySelector('.evidence-error-message')) {
                         const errorDiv = document.createElement('div');
                         errorDiv.className = 'evidence-error-message alert alert-danger mt-2';
@@ -407,7 +407,7 @@ document.getElementById('sectionForm').addEventListener('submit', function(e) {
             }
         }
     });
-    
+
     if (!valid) {
         e.preventDefault();
         // Scroll to first error
@@ -441,7 +441,7 @@ document.querySelectorAll('input[type="radio"]').forEach(function(radio) {
         const questionCard = this.closest('.question-card');
         questionCard.classList.add('border-success');
         questionCard.classList.remove('border-danger');
-        
+
         // Add checkmark to question number
         const questionNumber = questionCard.querySelector('.question-number');
         if (questionNumber && !questionNumber.querySelector('.bi-check-circle')) {
@@ -456,7 +456,7 @@ document.querySelectorAll('.file-input').forEach(function(input) {
         const fileName = this.files[0] ? this.files[0].name : '';
         const fileNameDisplay = this.closest('.file-upload-container').querySelector('.file-name');
         const button = this.closest('.file-upload-container').querySelector('.file-upload-btn');
-        
+
         if (fileName) {
             fileNameDisplay.textContent = fileName;
             button.innerHTML = '<i class="bi bi-check-circle-fill me-2 text-success"></i>File Selected';
