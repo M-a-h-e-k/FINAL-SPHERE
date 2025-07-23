@@ -58,6 +58,7 @@ class User(db.Model):
     last_name = db.Column(db.String(100))
     phone = db.Column(db.String(20))
     is_active = db.Column(db.Boolean, default=True)
+    first_login = db.Column(db.Boolean, default=True)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     last_login = db.Column(db.DateTime)
 
@@ -731,6 +732,12 @@ def login():
         session['user_id'] = user.id
         session['role'] = user.role
         user.last_login = datetime.now(timezone.utc)
+        
+        # Check if this is first login for lead users
+        if user.role == 'lead' and user.first_login:
+            db.session.commit()
+            return redirect(url_for('change_password_first_login'))
+        
         db.session.commit()
         return redirect(url_for('dashboard'))
     return render_template('login.html')
@@ -1149,16 +1156,42 @@ def client_reply_comment(comment_id):
 
     return redirect(request.referrer or url_for('client_comments'))
 
+@app.route('/lead/comments')
+@login_required('lead')
+def lead_comments():
+    # Get all comments where this lead is involved (either as the lead or where client replied)
+    comments = LeadComment.query.options(
+        db.joinedload(LeadComment.product),
+        db.joinedload(LeadComment.client),
+        db.joinedload(LeadComment.response)
+    ).filter(
+        db.or_(
+            LeadComment.lead_id == session['user_id'],
+            db.and_(
+                LeadComment.status == 'client_reply',
+                LeadComment.parent_comment_id.in_(
+                    db.session.query(LeadComment.id).filter_by(lead_id=session['user_id'])
+                )
+            )
+        )
+    ).order_by(LeadComment.created_at.desc()).all()
+    
+    return render_template('lead_comments.html', comments=comments)
+
 @app.route('/lead/comment/<int:comment_id>/reply', methods=['POST'])
 @login_required('lead')
 def lead_reply_comment(comment_id):
     parent_comment = LeadComment.query.get_or_404(comment_id)
-    if parent_comment.lead_id != session['user_id']:
+    
+    # Check if this lead has permission to reply
+    if parent_comment.lead_id != session['user_id'] and not (
+        parent_comment.status == 'client_reply' and 
+        LeadComment.query.filter_by(id=parent_comment.parent_comment_id, lead_id=session['user_id']).first()
+    ):
         flash('Unauthorized access.')
         return redirect(url_for('dashboard'))
 
     reply_text = request.form['reply']
-    status = request.form.get('review_status', 'pending')
 
     if reply_text.strip():
         # Create a reply comment
@@ -1168,24 +1201,85 @@ def lead_reply_comment(comment_id):
             client_id=parent_comment.client_id,
             product_id=parent_comment.product_id,
             comment=reply_text,
-            status=status,
+            status='lead_reply',
             parent_comment_id=comment_id
         )
         db.session.add(reply_comment)
-
-        # Update the original response if needed
-        if parent_comment.response_id and status in ['needs_revision', 'rejected']:
-            original_response = QuestionnaireResponse.query.get(parent_comment.response_id)
-            if original_response:
-                original_response.is_reviewed = False  # Allow client to modify
-                # For rejected responses, ensure they're marked for client attention
-                if status == 'rejected':
-                    original_response.needs_client_response = True
-
         db.session.commit()
         flash('Reply sent to client successfully.')
 
-    return redirect(request.referrer or url_for('dashboard'))
+    return redirect(request.referrer or url_for('lead_comments'))
+
+@app.route('/change-password-first-login', methods=['GET', 'POST'])
+@login_required('lead')
+def change_password_first_login():
+    user = User.query.get(session['user_id'])
+    
+    # Only allow this route for first-time login
+    if not user.first_login:
+        return redirect(url_for('dashboard'))
+    
+    if request.method == 'POST':
+        current_password = request.form['current_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+        
+        # Validate current password
+        if not user.check_password(current_password):
+            flash('Current password is incorrect.', 'error')
+            return render_template('change_password_first_login.html')
+        
+        # Validate new password
+        if len(new_password) < 8:
+            flash('New password must be at least 8 characters long.', 'error')
+            return render_template('change_password_first_login.html')
+        
+        if new_password != confirm_password:
+            flash('New passwords do not match.', 'error')
+            return render_template('change_password_first_login.html')
+        
+        # Update password and mark first login as complete
+        user.set_password(new_password)
+        user.first_login = False
+        db.session.commit()
+        
+        flash('Password changed successfully! Welcome to SecureSphere.', 'success')
+        return redirect(url_for('dashboard'))
+    
+    return render_template('change_password_first_login.html')
+
+@app.route('/change-password', methods=['GET', 'POST'])
+@login_required()
+def change_password():
+    user = User.query.get(session['user_id'])
+    
+    if request.method == 'POST':
+        current_password = request.form['current_password']
+        new_password = request.form['new_password']
+        confirm_password = request.form['confirm_password']
+        
+        # Validate current password
+        if not user.check_password(current_password):
+            flash('Current password is incorrect.', 'error')
+            return render_template('change_password.html')
+        
+        # Validate new password
+        if len(new_password) < 8:
+            flash('New password must be at least 8 characters long.', 'error')
+            return render_template('change_password.html')
+        
+        if new_password != confirm_password:
+            flash('New passwords do not match.', 'error')
+            return render_template('change_password.html')
+        
+        # Update password
+        user.set_password(new_password)
+        db.session.commit()
+        
+        flash('Password changed successfully!', 'success')
+        return redirect(url_for('dashboard'))
+    
+    return render_template('change_password.html')
 
 @app.route('/review/<int:response_id>', methods=['GET', 'POST'])
 @login_required('lead')
