@@ -1,287 +1,166 @@
 {% extends "base.html" %}
 
-{% block title %}Reviewer Comments - SecureSphere{% endblock %}
+{% block title %}Reviewer Communications - SecureSphere{% endblock %}
 
 {% block content %}
-<div class="dashboard-header text-center mb-4">
-    <h1 class="display-6 fw-bold mb-2">
-        <i class="bi bi-chat-left-text me-3"></i>Reviewer Comments & Feedback
-    </h1>
-    <p class="lead mb-0">Review feedback and communications from your security reviewer</p>
-</div>
-
-{% if comments %}
-<div class="row">
-    <div class="col-12">
-        <div class="card dashboard-card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="bi bi-envelope-open me-2"></i>Recent Communications
-                </h5>
+<div class="chat-container">
+    <!-- Chat Header -->
+    <div class="chat-header">
+        <div class="d-flex align-items-center">
+            <div class="chat-avatar">
+                <i class="bi bi-shield-check"></i>
             </div>
-            <div class="card-body">
-                {% for comment in comments %}
-                <div class="card mb-3 {% if not comment.is_read %}border-warning{% endif %}">
-                    <div class="card-body">
-                        <div class="row">
-                            <div class="col-md-8">
-                                <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h6 class="mb-0">
-                                        <i class="bi bi-person-badge me-2"></i>{{ comment.lead.username }}
-                                        {% if not comment.is_read %}
-                                            <span class="badge bg-warning ms-2">New</span>
-                                        {% endif %}
-                                    </h6>
-                                    <small class="text-muted">{{ comment.created_at.strftime('%B %d, %Y at %I:%M %p') }}</small>
-                                </div>
-                                
-                                <div class="mb-2">
-                                    <strong>Product:</strong> {{ comment.product.name }}
-                                </div>
-                                
-                                {% if comment.response %}
-                                <div class="mb-2">
-                                    <strong>Question:</strong> 
-                                    <span class="text-muted">{{ comment.response.question[:100] }}{% if comment.response.question|length > 100 %}...{% endif %}</span>
-                                </div>
-                                {% endif %}
-                                
-                                <div class="alert alert-light border mb-0">
-                                    <h6 class="mb-2">
-                                        <i class="bi bi-chat-quote me-2"></i>Reviewer Comment:
-                                    </h6>
-                                    <p class="mb-0">{{ comment.comment }}</p>
-                                </div>
-                            </div>
-                            
-                            <div class="col-md-4">
-                                <div class="text-center">
-                                    <div class="mb-3">
-                                        <span class="badge 
-                                            {% if comment.status == 'approved' %}bg-success
-                                            {% elif comment.status == 'needs_revision' %}bg-warning
-                                            {% elif comment.status == 'rejected' %}bg-danger
-                                            {% else %}bg-secondary{% endif %} p-2">
-                                            <i class="bi bi-{% if comment.status == 'approved' %}check-circle
-                                                {% elif comment.status == 'needs_revision' %}exclamation-triangle
-                                                {% elif comment.status == 'rejected' %}x-circle
-                                                {% else %}clock{% endif %} me-1"></i>
-                                            {{ comment.status.replace('_', ' ').title() }}
-                                        </span>
-                                    </div>
-                                    
-                                    <div class="d-grid gap-2">
-                                        {% if not comment.is_read %}
-                                        <a href="{{ url_for('mark_comment_read', comment_id=comment.id) }}" 
-                                           class="btn btn-outline-primary btn-sm">
-                                            <i class="bi bi-check2 me-1"></i>Mark as Read
-                                        </a>
-                                        {% endif %}
-                                        
-                                        <button class="btn btn-outline-success btn-sm" 
-                                                data-bs-toggle="collapse" 
-                                                data-bs-target="#reply-{{ comment.id }}">
-                                            <i class="bi bi-reply me-1"></i>Reply
-                                        </button>
-                                        
-                                        {% if comment.response %}
-                                        <a href="{{ url_for('product_results', product_id=comment.product_id) }}" 
-                                           class="btn btn-outline-info btn-sm">
-                                            <i class="bi bi-eye me-1"></i>View Details
-                                        </a>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
+            <div class="ms-3">
+                <h5 class="mb-0">Security Reviewer</h5>
+                <small class="text-light opacity-75">Review feedback and communications</small>
+            </div>
+        </div>
+        <div class="chat-actions">
+            <span class="badge bg-light text-dark">{{ comments|length }} messages</span>
+        </div>
+    </div>
+
+    <!-- Chat Messages -->
+    <div class="chat-messages" id="chatMessages">
+        {% if comments %}
+            {% for comment in comments %}
+                <!-- Group messages by conversation -->
+                <div class="message-group mb-4">
+                    <!-- Product Context Card -->
+                    <div class="product-context-card">
+                        <div class="d-flex align-items-center mb-2">
+                            <i class="bi bi-box-seam text-primary me-2"></i>
+                            <strong>{{ comment.product.name }}</strong>
+                            {% if comment.response %}
+                                <span class="ms-2 text-muted">• Question #{{ loop.index }}</span>
+                            {% endif %}
                         </div>
-                        
-                        <!-- Reply Form -->
-                        <div class="collapse mt-3" id="reply-{{ comment.id }}">
-                            <div class="card bg-light border-0">
-                                <div class="card-body">
-                                    <h6 class="mb-3">
-                                        <i class="bi bi-reply me-2"></i>Reply to Reviewer
-                                    </h6>
-                                    <form method="post" action="{{ url_for('client_reply_comment', comment_id=comment.id) }}" enctype="multipart/form-data">
-                                        <div class="mb-3">
-                                            <label class="form-label">
-                                                <i class="bi bi-chat-text me-2"></i>Your Reply:
-                                            </label>
-                                            <textarea class="form-control" name="reply" rows="3" 
-                                                      placeholder="Type your reply here..." required></textarea>
-                                        </div>
-                                        
-                                        {% if comment.status in ['needs_revision', 'rejected'] %}
-                                        <div class="mb-3">
-                                            <label class="form-label">
-                                                <i class="bi bi-paperclip me-2"></i>Evidence (Optional):
-                                            </label>
-                                            <input type="file" class="form-control" name="evidence" 
-                                                   accept=".csv,.txt,.pdf,.jpg,.jpeg,.png,.doc,.docx">
-                                            <div class="form-text">
-                                                {% if comment.status == 'needs_revision' %}
-                                                    Upload additional evidence to address the reviewer's feedback.
-                                                {% else %}
-                                                    Upload new evidence to support your re-submission.
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                        {% endif %}
-                                        
-                                        <div class="d-flex gap-2">
-                                            <button type="submit" class="btn btn-success btn-sm">
-                                                <i class="bi bi-send me-1"></i>Send Reply
-                                                {% if comment.status in ['needs_revision', 'rejected'] %}
-                                                    & Update Evidence
-                                                {% endif %}
-                                            </button>
-                                            <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                                    data-bs-toggle="collapse" 
-                                                    data-bs-target="#reply-{{ comment.id }}">
-                                                <i class="bi bi-x me-1"></i>Cancel
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
+                        {% if comment.response %}
+                            <div class="question-preview">
+                                <small class="text-muted">{{ comment.response.question[:80] }}{% if comment.response.question|length > 80 %}...{% endif %}</small>
                             </div>
-                        </div>
-                        
-                        <!-- Show Replies -->
-                        {% if comment.replies %}
-                        <div class="mt-3">
-                            <h6 class="text-muted mb-2">
-                                <i class="bi bi-chat-left-dots me-2"></i>Conversation Thread
-                            </h6>
-                            {% for reply in comment.replies|sort(attribute='created_at') %}
-                            <div class="card border-0 mb-2 {% if reply.client_id == session['user_id'] %}ms-4 bg-primary bg-opacity-10{% else %}me-4 bg-light{% endif %}">
-                                <div class="card-body py-2">
-                                    <div class="d-flex justify-content-between align-items-start">
-                                        <div class="d-flex align-items-center">
-                                            <div class="avatar bg-{% if reply.client_id == session['user_id'] %}primary{% else %}secondary{% endif %} text-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 28px; height: 28px; font-size: 0.7rem;">
-                                                {{ (reply.client.username if reply.client_id == session['user_id'] else reply.lead.username)[0].upper() }}
-                                            </div>
-                                            <div>
-                                                <strong class="text-{% if reply.client_id == session['user_id'] %}primary{% else %}secondary{% endif %}">
-                                                    {{ 'You' if reply.client_id == session['user_id'] else reply.lead.username }}
-                                                </strong>
-                                                <small class="text-muted ms-2">{{ reply.created_at.strftime('%b %d, %Y at %I:%M %p') }}</small>
-                                            </div>
-                                        </div>
-                                        <span class="badge bg-{% if reply.status == 'client_reply' %}info{% elif reply.status == 'approved' %}success{% elif reply.status == 'needs_revision' %}warning{% elif reply.status == 'rejected' %}danger{% else %}secondary{% endif %} rounded-pill">
-                                            {{ reply.status.replace('_', ' ').title() }}
-                                        </span>
-                                    </div>
-                                    <div class="mt-2 {% if reply.client_id == session['user_id'] %}ms-4{% else %}ms-4{% endif %}">
-                                        <p class="mb-0">{{ reply.comment }}</p>
-                                        
-                                        {% if reply.client_id != session['user_id'] and reply.status in ['needs_revision', 'rejected'] %}
-                                        <div class="mt-2">
-                                            <button class="btn btn-outline-primary btn-sm" 
-                                                    data-bs-toggle="collapse" 
-                                                    data-bs-target="#reply-to-{{ reply.id }}">
-                                                <i class="bi bi-reply me-1"></i>Reply to this
-                                            </button>
-                                        </div>
-                                        <div class="collapse mt-2" id="reply-to-{{ reply.id }}">
-                                            <div class="card bg-light border-0">
-                                                <div class="card-body">
-                                                    <form method="post" action="{{ url_for('client_reply_comment', comment_id=reply.id) }}" enctype="multipart/form-data">
-                                                        <div class="mb-2">
-                                                            <textarea class="form-control form-control-sm" name="reply" rows="2" 
-                                                                      placeholder="Type your response..." required></textarea>
-                                                        </div>
-                                                        {% if reply.status in ['needs_revision', 'rejected'] %}
-                                                        <div class="mb-2">
-                                                            <input type="file" class="form-control form-control-sm" name="evidence" 
-                                                                   accept=".csv,.txt,.pdf,.jpg,.jpeg,.png,.doc,.docx">
-                                                        </div>
-                                                        {% endif %}
-                                                        <div class="d-flex gap-1">
-                                                            <button type="submit" class="btn btn-primary btn-sm">
-                                                                <i class="bi bi-send me-1"></i>Send
-                                                            </button>
-                                                            <button type="button" class="btn btn-outline-secondary btn-sm" 
-                                                                    data-bs-toggle="collapse" 
-                                                                    data-bs-target="#reply-to-{{ reply.id }}">
-                                                                Cancel
-                                                            </button>
-                                                        </div>
-                                                    </form>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        {% endif %}
-                                    </div>
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
                         {% endif %}
                     </div>
+
+                    <!-- Reviewer Message -->
+                    <div class="message reviewer-message">
+                        <div class="message-content">
+                            <div class="message-header">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-person-badge text-primary me-2"></i>
+                                    <strong>{{ comment.lead.username }}</strong>
+                                    <span class="message-time ms-auto">{{ comment.created_at.strftime('%m/%d/%Y %I:%M %p') }}</span>
+                                </div>
+                                <div class="message-status">
+                                    <span class="status-badge status-{{ comment.status }}">
+                                        {% if comment.status == 'approved' %}
+                                            <i class="bi bi-check-circle"></i> Approved
+                                        {% elif comment.status == 'needs_revision' %}
+                                            <i class="bi bi-exclamation-triangle"></i> Needs Revision
+                                        {% elif comment.status == 'rejected' %}
+                                            <i class="bi bi-x-circle"></i> Rejected
+                                        {% else %}
+                                            <i class="bi bi-clock"></i> Pending
+                                        {% endif %}
+                                    </span>
+                                </div>
+                            </div>
+                            <div class="message-text">
+                                {{ comment.comment }}
+                            </div>
+                            <div class="message-actions">
+                                {% if not comment.is_read %}
+                                    <a href="{{ url_for('mark_comment_read', comment_id=comment.id) }}" 
+                                       class="btn btn-sm btn-outline-primary">
+                                        <i class="bi bi-check2"></i> Mark as Read
+                                    </a>
+                                {% endif %}
+                                <button class="btn btn-sm btn-primary" 
+                                        onclick="toggleReplyForm({{ comment.id }})">
+                                    <i class="bi bi-reply"></i> Reply
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Client Replies -->
+                    {% if comment.replies %}
+                        {% for reply in comment.replies %}
+                            <div class="message client-message">
+                                <div class="message-content">
+                                    <div class="message-header">
+                                        <div class="d-flex align-items-center">
+                                            <i class="bi bi-person-circle text-success me-2"></i>
+                                            <strong>{{ reply.client.username }}</strong>
+                                            <span class="message-time ms-auto">{{ reply.created_at.strftime('%m/%d/%Y %I:%M %p') }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="message-text">
+                                        {{ reply.comment }}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Reply Form -->
+                    <div class="reply-form" id="replyForm{{ comment.id }}" style="display: none;">
+                        <form method="post" action="{{ url_for('client_reply_comment', comment_id=comment.id) }}" enctype="multipart/form-data">
+                            <div class="message-compose">
+                                <div class="compose-input">
+                                    <textarea class="form-control" name="reply" rows="3" 
+                                              placeholder="Type your reply..." required></textarea>
+                                </div>
+                                {% if comment.status in ['needs_revision', 'rejected'] %}
+                                    <div class="compose-attachment mt-2">
+                                        <label class="form-label">
+                                            <i class="bi bi-paperclip me-1"></i>Attach Evidence (Optional)
+                                        </label>
+                                        <input type="file" class="form-control form-control-sm" name="evidence" 
+                                               accept=".csv,.txt,.pdf,.jpg,.jpeg,.png,.doc,.docx">
+                                    </div>
+                                {% endif %}
+                                <div class="compose-actions mt-3">
+                                    <button type="submit" class="btn btn-primary">
+                                        <i class="bi bi-send"></i> Send Reply
+                                    </button>
+                                    <button type="button" class="btn btn-outline-secondary" 
+                                            onclick="toggleReplyForm({{ comment.id }})">
+                                        Cancel
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
                 </div>
-                {% endfor %}
+            {% endfor %}
+        {% else %}
+            <div class="empty-chat">
+                <div class="text-center py-5">
+                    <i class="bi bi-chat-dots display-1 text-muted mb-3"></i>
+                    <h5 class="text-muted">No Messages Yet</h5>
+                    <p class="text-muted">Reviewer communications will appear here when available.</p>
+                </div>
             </div>
-        </div>
+        {% endif %}
     </div>
 </div>
-
-<!-- Pagination if needed -->
-{% if comments|length > 10 %}
-<div class="d-flex justify-content-center mt-4">
-    <nav aria-label="Comments pagination">
-        <ul class="pagination">
-            <li class="page-item">
-                <a class="page-link" href="#" aria-label="Previous">
-                    <span aria-hidden="true">&laquo;</span>
-                </a>
-            </li>
-            <li class="page-item active"><a class="page-link" href="#">1</a></li>
-            <li class="page-item"><a class="page-link" href="#">2</a></li>
-            <li class="page-item"><a class="page-link" href="#">3</a></li>
-            <li class="page-item">
-                <a class="page-link" href="#" aria-label="Next">
-                    <span aria-hidden="true">&raquo;</span>
-                </a>
-            </li>
-        </ul>
-    </nav>
-</div>
-{% endif %}
-
-{% else %}
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card text-center">
-            <div class="card-body">
-                <i class="bi bi-chat-left-text display-1 text-muted mb-3"></i>
-                <h5 class="card-title">No Comments Yet</h5>
-                <p class="card-text text-muted">
-                    You haven't received any feedback from your security reviewer yet. 
-                    Complete your assessments and your reviewer will provide feedback and guidance.
-                </p>
-                <a href="{{ url_for('dashboard') }}" class="btn btn-gradient-primary">
-                    <i class="bi bi-arrow-left me-2"></i>Back to Dashboard
-                </a>
-            </div>
-        </div>
-    </div>
-</div>
-{% endif %}
 
 <script>
-// Auto-mark comments as read when viewed for 3 seconds
+function toggleReplyForm(commentId) {
+    const form = document.getElementById('replyForm' + commentId);
+    if (form.style.display === 'none') {
+        form.style.display = 'block';
+        form.scrollIntoView({ behavior: 'smooth' });
+    } else {
+        form.style.display = 'none';
+    }
+}
+
+// Auto-scroll to bottom on load
 document.addEventListener('DOMContentLoaded', function() {
-    const unreadComments = document.querySelectorAll('.border-warning');
-    
-    unreadComments.forEach(function(comment) {
-        const readButton = comment.querySelector('a[href*="mark_comment_read"]');
-        if (readButton) {
-            setTimeout(function() {
-                // Auto-mark as read after 3 seconds of viewing
-                readButton.click();
-            }, 3000);
-        }
-    });
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.scrollTop = chatMessages.scrollHeight;
 });
 </script>
 {% endblock %}

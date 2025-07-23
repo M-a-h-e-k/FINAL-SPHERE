@@ -206,11 +206,11 @@
                                                                 </td>
                                                                 <td>
                                                                     <p class="mb-1 fw-medium">{{ resp.question[:80] }}{% if resp.question|length > 80 %}...{% endif %}</p>
-                                                                    {% if resp.comment %}
-                                                                    <small class="text-muted">
-                                                                        <i class="bi bi-chat-dots me-1"></i>{{ resp.comment[:50] }}{% if resp.comment|length > 50 %}...{% endif %}
-                                                                    </small>
-                                                                    {% endif %}
+                                                                                                                    {% if resp.client_comment %}
+                                                    <small class="text-muted">
+                                                        <i class="bi bi-chat-dots me-1"></i>{{ resp.client_comment[:50] }}{% if resp.client_comment|length > 50 %}...{% endif %}
+                                                    </small>
+                                                {% endif %}
                                                                 </td>
                                                                 <td>
                                                                     <span class="badge bg-success">{{ resp.answer }}</span>
