@@ -1,0 +1,192 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Users - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="dashboard-header text-center mb-4">
+        <h1 class="display-6 fw-bold mb-2">
+            <i class="bi bi-people me-3"></i>User Management
+        </h1>
+        <p class="lead mb-0">Manage users and invitations</p>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mb-4">
+        <div class="col-12 text-center">
+            <a href="{{ url_for('invite_user') }}" class="btn btn-primary me-2">
+                <i class="bi bi-person-plus me-2"></i>Invite New User
+            </a>
+            <a href="{{ url_for('dashboard') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-house me-2"></i>Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Pending Invitations -->
+    {% if pending_invitations %}
+    <div class="card shadow mb-4">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">
+                <i class="bi bi-clock me-2"></i>Pending Invitations ({{ pending_invitations|length }})
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Organization</th>
+                            <th>Invited By</th>
+                            <th>Created</th>
+                            <th>Expires</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invitation in pending_invitations %}
+                        <tr>
+                            <td>{{ invitation.email }}</td>
+                            <td>
+                                <span class="badge bg-{% if invitation.role == 'client' %}primary{% else %}success{% endif %}">
+                                    {{ invitation.role.title() }}
+                                </span>
+                            </td>
+                            <td>{{ invitation.organization or 'N/A' }}</td>
+                            <td>{{ invitation.inviter.username }}</td>
+                            <td>{{ invitation.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td>
+                                {% if invitation.is_expired() %}
+                                    <span class="badge bg-danger">Expired</span>
+                                {% else %}
+                                    {{ invitation.expires_at.strftime('%Y-%m-%d %H:%M') }}
+                                {% endif %}
+                            </td>
+                            <td>
+                                <button class="btn btn-outline-info btn-sm me-1" 
+                                        onclick="copyInvitationLink('{{ url_for('register', token=invitation.token, _external=True) }}')">
+                                    <i class="bi bi-copy"></i>
+                                </button>
+                                <a href="{{ url_for('revoke_invitation', invitation_id=invitation.id) }}" 
+                                   class="btn btn-outline-danger btn-sm"
+                                   onclick="return confirm('Are you sure you want to revoke this invitation?')">
+                                    <i class="bi bi-trash"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Active Users -->
+    <div class="card shadow">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-people-fill me-2"></i>Active Users ({{ users|length }})
+            </h5>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Organization</th>
+                            <th>Created</th>
+                            <th>Last Login</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>
+                                <strong>{{ user.username }}</strong>
+                                {% if user.first_name or user.last_name %}
+                                <br><small class="text-muted">{{ user.first_name }} {{ user.last_name }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                <span class="badge bg-{% if user.role == 'superuser' %}danger{% elif user.role == 'lead' %}success{% else %}primary{% endif %}">
+                                    {{ user.role.title() }}
+                                </span>
+                            </td>
+                            <td>{{ user.organization or 'N/A' }}</td>
+                            <td>{{ user.created_at.strftime('%Y-%m-%d') if user.created_at else 'N/A' }}</td>
+                            <td>{{ user.last_login.strftime('%Y-%m-%d %H:%M') if user.last_login else 'Never' }}</td>
+                            <td>
+                                {% if user.is_active %}
+                                    <span class="badge bg-success">Active</span>
+                                {% else %}
+                                    <span class="badge bg-secondary">Inactive</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for showing invitation link -->
+<div class="modal fade" id="invitationLinkModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Invitation Link</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Copy this link and send it to the invitee:</label>
+                    <div class="input-group mt-2">
+                        <input type="text" class="form-control" id="invitationLinkInput" readonly>
+                        <button class="btn btn-outline-secondary" type="button" onclick="copyToClipboard()">
+                            <i class="bi bi-copy"></i> Copy
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyInvitationLink(link) {
+    document.getElementById('invitationLinkInput').value = link;
+    var modal = new bootstrap.Modal(document.getElementById('invitationLinkModal'));
+    modal.show();
+}
+
+function copyToClipboard() {
+    var copyText = document.getElementById('invitationLinkInput');
+    copyText.select();
+    copyText.setSelectionRange(0, 99999);
+    navigator.clipboard.writeText(copyText.value);
+    
+    // Show feedback
+    var button = event.target.closest('button');
+    var originalText = button.innerHTML;
+    button.innerHTML = '<i class="bi bi-check"></i> Copied!';
+    button.classList.remove('btn-outline-secondary');
+    button.classList.add('btn-success');
+    
+    setTimeout(function() {
+        button.innerHTML = originalText;
+        button.classList.remove('btn-success');
+        button.classList.add('btn-outline-secondary');
+    }, 2000);
+}
+</script>
+{% endblock %}

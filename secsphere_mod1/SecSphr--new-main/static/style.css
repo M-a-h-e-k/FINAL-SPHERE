@@ -2476,3 +2476,31 @@ h6 { font-size: 0.825rem; font-weight: 600; }
     min-width: 2rem;
     text-align: center;
 }
+
+/* Collapsible Section Styling for Lead Review */
+.dashboard-lead .collapse-icon {
+    transition: transform 0.2s ease-in-out;
+}
+
+.dashboard-lead .btn[aria-expanded="true"] .collapse-icon {
+    transform: rotate(180deg);
+}
+
+.dashboard-lead .btn[aria-expanded="false"] .collapse-icon {
+    transform: rotate(0deg);
+}
+
+.dashboard-lead .btn-link:hover {
+    background-color: rgba(255, 255, 255, 0.1) !important;
+    border-radius: 0;
+}
+
+.dashboard-lead .section-container .card-header button {
+    border: none;
+    outline: none;
+    box-shadow: none;
+}
+
+.dashboard-lead .section-container .card-header button:focus {
+    box-shadow: none;
+}

@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Invite User - Admin{% endblock %}
+
+{% block content %}
+<div class="container my-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-plus me-2"></i>Invite New User
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="email" class="form-control" id="email" name="email" 
+                                           placeholder="user@example.com" required>
+                                    <label for="email">Email Address</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <select class="form-select" id="role" name="role" required>
+                                        <option value="">Select Role</option>
+                                        <option value="client">Client</option>
+                                        <option value="lead">Lead Reviewer</option>
+                                    </select>
+                                    <label for="role">User Role</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input type="text" class="form-control" id="organization" name="organization" 
+                                   placeholder="Organization Name">
+                            <label for="organization">Organization (Optional)</label>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <strong>How it works:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li><strong>For Clients:</strong> An invitation link will be generated that allows the client to register with their own credentials</li>
+                                <li><strong>For Leads:</strong> Use the "Create Lead" section below to directly create lead accounts with credentials</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-envelope me-2"></i>Generate Invitation Link
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <!-- Create Lead Section -->
+            <div class="card shadow mt-4">
+                <div class="card-header bg-success text-white">
+                    <h4 class="mb-0">
+                        <i class="bi bi-person-gear me-2"></i>Create Lead Reviewer
+                    </h4>
+                </div>
+                <div class="card-body">
+                    <form method="post" action="{{ url_for('create_lead') }}">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="lead_username" name="username" 
+                                           placeholder="username" required>
+                                    <label for="lead_username">Username</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="email" class="form-control" id="lead_email" name="email" 
+                                           placeholder="lead@example.com" required>
+                                    <label for="lead_email">Email Address</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="password" class="form-control" id="lead_password" name="password" 
+                                           placeholder="password" required>
+                                    <label for="lead_password">Password</label>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-floating mb-3">
+                                    <input type="text" class="form-control" id="lead_organization" name="organization" 
+                                           placeholder="Organization Name">
+                                    <label for="lead_organization">Organization (Optional)</label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="alert alert-warning">
+                            <i class="bi bi-exclamation-triangle me-2"></i>
+                            Lead reviewers will be created immediately with the provided credentials.
+                        </div>
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success">
+                                <i class="bi bi-person-check me-2"></i>Create Lead Reviewer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="text-center mt-4">
+                <a href="{{ url_for('manage_users') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-people me-2"></i>Manage Users
+                </a>
+                <a href="{{ url_for('dashboard') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-house me-2"></i>Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

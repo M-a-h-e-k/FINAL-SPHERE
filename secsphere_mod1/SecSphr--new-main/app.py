@@ -7,6 +7,10 @@ from werkzeug.utils import secure_filename
 from functools import wraps
 from datetime import datetime, timezone
 
+# Add import for generating random tokens
+import secrets
+from datetime import timedelta
+
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'supersecretkey-change-in-production')
 
@@ -189,6 +193,29 @@ class SystemSettings(db.Model):
     
     def __repr__(self):
         return f'<SystemSettings {self.key}: {self.value}>'
+
+class InvitationToken(db.Model):
+    __tablename__ = 'invitation_tokens'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(100), unique=True, nullable=False, index=True)
+    email = db.Column(db.String(120), nullable=False, index=True)
+    role = db.Column(db.String(20), nullable=False)  # client or lead
+    organization = db.Column(db.String(200))
+    invited_by = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    is_used = db.Column(db.Boolean, default=False)
+    expires_at = db.Column(db.DateTime, nullable=False)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
+    used_at = db.Column(db.DateTime)
+    
+    # Relationships
+    inviter = db.relationship('User', backref='sent_invitations')
+    
+    def is_expired(self):
+        return datetime.now(timezone.utc) > self.expires_at
+    
+    def __repr__(self):
+        return f'<InvitationToken {self.email}: {self.role}>'
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
@@ -436,36 +463,72 @@ def index():
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
+    # Get invitation token from URL
+    token = request.args.get('token')
+    invitation = None
+    
+    if token:
+        invitation = InvitationToken.query.filter_by(token=token, is_used=False).first()
+        if not invitation or invitation.is_expired():
+            flash('Invalid or expired invitation link.')
+            return redirect(url_for('login'))
+    else:
+        flash('Registration requires a valid invitation.')
+        return redirect(url_for('login'))
+    
     if request.method == 'POST':
         username = request.form['username']
         email = request.form['email']
         password = request.form['password']
-        role = request.form['role']
-        organization = request.form.get('organization')
+        organization = request.form.get('organization', '')
+        
+        # Validate invitation token
+        if not invitation:
+            flash('Registration requires a valid invitation.')
+            return redirect(url_for('login'))
+        
+        # Ensure email matches invitation
+        if email != invitation.email:
+            flash('Email must match the invitation.')
+            return redirect(url_for('register', token=token))
+        
         # Server-side validation
-        if not username or not email or not password or not role:
+        if not username or not email or not password:
             flash('Please fill in all fields.')
-            return redirect(url_for('register'))
-        if role == 'client' and not organization:
-            flash('Organization name required for client.')
-            return redirect(url_for('register'))
+            return redirect(url_for('register', token=token))
+        
         if User.query.filter_by(username=username).first():
             flash('Username already exists.')
-            return redirect(url_for('register'))
+            return redirect(url_for('register', token=token))
+        
         import re
         if not re.match(r'^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$', email):
             flash('Invalid email format.')
-            return redirect(url_for('register'))
+            return redirect(url_for('register', token=token))
+        
         if len(password) < 8 or not re.search(r'[A-Z]', password) or not re.search(r'[a-z]', password) or not re.search(r'\d', password):
             flash('Password must be at least 8 characters and include uppercase, lowercase, and number.')
-            return redirect(url_for('register'))
-        user = User(username=username, email=email, role=role, organization=organization)
+            return redirect(url_for('register', token=token))
+        
+        # Create user with invitation details
+        user = User(
+            username=username, 
+            email=email, 
+            role=invitation.role,  # Use role from invitation
+            organization=organization or invitation.organization
+        )
         user.set_password(password)
         db.session.add(user)
+        
+        # Mark invitation as used
+        invitation.is_used = True
+        invitation.used_at = datetime.now(timezone.utc)
+        
         db.session.commit()
         flash('Registration successful. Please login.')
         return redirect(url_for('login'))
-    return render_template('register.html')
+    
+    return render_template('register.html', invitation=invitation)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -1229,6 +1292,109 @@ def api_all_scores():
         all_scores.append(product_data)
     
     return jsonify(all_scores)
+
+@app.route('/admin/invite_user', methods=['GET', 'POST'])
+@login_required('superuser')
+def invite_user():
+    if request.method == 'POST':
+        email = request.form['email']
+        role = request.form['role']
+        organization = request.form.get('organization', '')
+        
+        # Validate inputs
+        if not email or not role:
+            flash('Email and role are required.')
+            return redirect(url_for('invite_user'))
+        
+        if role not in ['client', 'lead']:
+            flash('Invalid role. Must be client or lead.')
+            return redirect(url_for('invite_user'))
+        
+        # Check if user already exists
+        if User.query.filter_by(email=email).first():
+            flash('User with this email already exists.')
+            return redirect(url_for('invite_user'))
+        
+        # Check if there's already a pending invitation
+        existing_invitation = InvitationToken.query.filter_by(email=email, is_used=False).first()
+        if existing_invitation and not existing_invitation.is_expired():
+            flash('There is already a pending invitation for this email.')
+            return redirect(url_for('invite_user'))
+        
+        # Generate invitation token
+        token = secrets.token_urlsafe(32)
+        expires_at = datetime.now(timezone.utc) + timedelta(days=7)  # 7 days to accept
+        
+        invitation = InvitationToken(
+            token=token,
+            email=email,
+            role=role,
+            organization=organization,
+            invited_by=session['user_id'],
+            expires_at=expires_at
+        )
+        
+        db.session.add(invitation)
+        db.session.commit()
+        
+        # Generate invitation link
+        invitation_link = url_for('register', token=token, _external=True)
+        
+        flash(f'Invitation sent! Registration link: {invitation_link}')
+        return redirect(url_for('invite_user'))
+    
+    return render_template('admin_invite_user.html')
+
+@app.route('/admin/manage_users')
+@login_required('superuser')
+def manage_users():
+    users = User.query.order_by(User.created_at.desc()).all()
+    pending_invitations = InvitationToken.query.filter_by(is_used=False).order_by(InvitationToken.created_at.desc()).all()
+    return render_template('admin_manage_users.html', users=users, pending_invitations=pending_invitations)
+
+@app.route('/admin/create_lead', methods=['POST'])
+@login_required('superuser')
+def create_lead():
+    username = request.form['username']
+    email = request.form['email']
+    password = request.form['password']
+    organization = request.form.get('organization', '')
+    
+    # Validate inputs
+    if not username or not email or not password:
+        flash('Username, email, and password are required.')
+        return redirect(url_for('manage_users'))
+    
+    if User.query.filter_by(username=username).first():
+        flash('Username already exists.')
+        return redirect(url_for('manage_users'))
+    
+    if User.query.filter_by(email=email).first():
+        flash('Email already exists.')
+        return redirect(url_for('manage_users'))
+    
+    # Create lead user
+    user = User(
+        username=username,
+        email=email,
+        role='lead',
+        organization=organization
+    )
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+    
+    flash(f'Lead user {username} created successfully. Password: {password}')
+    return redirect(url_for('manage_users'))
+
+@app.route('/admin/revoke_invitation/<int:invitation_id>')
+@login_required('superuser')
+def revoke_invitation(invitation_id):
+    invitation = InvitationToken.query.get_or_404(invitation_id)
+    invitation.is_used = True  # Mark as used to effectively revoke it
+    db.session.commit()
+    flash('Invitation revoked successfully.')
+    return redirect(url_for('manage_users'))
 
 if __name__ == '__main__':
     print("🚀 Starting SecureSphere Application")

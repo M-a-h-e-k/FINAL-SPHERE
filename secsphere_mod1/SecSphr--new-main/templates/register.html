@@ -3,154 +3,76 @@
 {% block title %}Register - SecureSphere{% endblock %}
 
 {% block content %}
-<div class="auth-wrapper">
-    <div class="container">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-5">
-                <div class="auth-card shadow-lg">
-                    <div class="card-header text-center">
-                        <div class="mb-2">
-                            <i class="bi bi-person-plus-fill fs-2"></i>
-                        </div>
-                        <h4 class="fw-bold mb-1">Create Account</h4>
-                        <p class="mb-0 opacity-75">Join SecureSphere today</p>
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow-lg border-0 rounded-lg mt-5">
+                <div class="card-header">
+                    <h3 class="text-center font-weight-light my-4">
+                        <i class="bi bi-person-plus me-2"></i>Complete Registration
+                    </h3>
+                    {% if invitation %}
+                    <div class="alert alert-info">
+                        <i class="bi bi-envelope me-2"></i>
+                        You've been invited to join as a <strong>{{ invitation.role.title() }}</strong>
+                        {% if invitation.organization %}for <strong>{{ invitation.organization }}</strong>{% endif %}
                     </div>
-                    <div class="card-body">
-                        <form method="post" id="registerForm" novalidate>
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-floating mb-2">
-                                        <input type="text" name="username" class="form-control" id="username" 
-                                               placeholder="Username" required>
-                                        <label for="username">
-                                            <i class="bi bi-person-fill me-2"></i>Username
-                                        </label>
-                                        <div class="invalid-feedback">Please enter a username.</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating mb-2">
-                                        <input type="email" name="email" class="form-control" id="email" 
-                                               placeholder="Email" required pattern="^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$">
-                                        <label for="email">
-                                            <i class="bi bi-envelope-fill me-2"></i>Email
-                                        </label>
-                                        <div class="invalid-feedback">Enter a valid email.</div>
-                                    </div>
-                                </div>
+                    {% endif %}
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        <div class="form-floating mb-3">
+                            <input class="form-control" id="inputUsername" name="username" type="text" 
+                                   placeholder="Enter your username" required />
+                            <label for="inputUsername">Username</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input class="form-control" id="inputEmail" name="email" type="email" 
+                                   placeholder="name@example.com" 
+                                   value="{{ invitation.email if invitation else '' }}" 
+                                   {% if invitation %}readonly{% endif %} required />
+                            <label for="inputEmail">Email address</label>
+                        </div>
+                        <div class="form-floating mb-3">
+                            <input class="form-control" id="inputPassword" name="password" type="password" 
+                                   placeholder="Password" required />
+                            <label for="inputPassword">Password</label>
+                            <div class="form-text">
+                                Password must be at least 8 characters with uppercase, lowercase, and number.
                             </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-floating mb-2">
-                                        <input type="password" name="password" class="form-control" id="password" 
-                                               placeholder="Password" required minlength="8" 
-                                               pattern="(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}">
-                                        <label for="password">
-                                            <i class="bi bi-lock-fill me-2"></i>Password
-                                        </label>
-                                        <div class="invalid-feedback">Min 8 chars, include uppercase, lowercase, and number.</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating mb-2">
-                                        <input type="password" name="confirm_password" class="form-control" id="confirm_password" 
-                                               placeholder="Confirm Password" required>
-                                        <label for="confirm_password">
-                                            <i class="bi bi-lock-fill me-2"></i>Confirm
-                                        </label>
-                                        <div class="invalid-feedback">Passwords do not match.</div>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="row">
-                                <div class="col-md-6">
-                                    <div class="form-floating mb-2">
-                                        <select name="role" class="form-select" id="role-select" required>
-                                            <option value="" selected disabled>Select Role</option>
-                                            <option value="client">Client</option>
-                                            <option value="lead">Lead</option>
-                                            <option value="superuser">Superuser</option>
-                                        </select>
-                                        <label for="role-select">
-                                            <i class="bi bi-shield-fill me-2"></i>Role
-                                        </label>
-                                        <div class="invalid-feedback">Select a role.</div>
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating mb-2" id="organization-field" style="display:none;">
-                                        <input type="text" name="organization" class="form-control" id="organization" 
-                                               placeholder="Organization Name">
-                                        <label for="organization">
-                                            <i class="bi bi-building-fill me-2"></i>Organization
-                                        </label>
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <button type="submit" class="btn btn-gradient-primary w-100 rounded-pill py-2 mb-3">
-                                <i class="bi bi-person-plus-fill me-2"></i>Create Account
+                        </div>
+                        {% if invitation and invitation.role == 'client' %}
+                        <div class="form-floating mb-3">
+                            <input class="form-control" id="inputOrganization" name="organization" type="text" 
+                                   placeholder="Organization Name" 
+                                   value="{{ invitation.organization if invitation.organization else '' }}" />
+                            <label for="inputOrganization">Organization Name</label>
+                        </div>
+                        {% endif %}
+                        {% if invitation %}
+                        <div class="alert alert-light">
+                            <small class="text-muted">
+                                <i class="bi bi-info-circle me-1"></i>
+                                Role: <strong>{{ invitation.role.title() }}</strong><br>
+                                Invited by: <strong>{{ invitation.inviter.username }}</strong><br>
+                                Expires: <strong>{{ invitation.expires_at.strftime('%B %d, %Y at %I:%M %p') }}</strong>
+                            </small>
+                        </div>
+                        {% endif %}
+                        <div class="d-grid">
+                            <button class="btn btn-primary btn-block" type="submit">
+                                <i class="bi bi-person-check me-2"></i>Complete Registration
                             </button>
-                            
-                            <div class="text-center">
-                                <span class="text-muted">Already have an account? </span>
-                                <a href="{{ url_for('login') }}" class="link-primary">Sign in</a>
-                            </div>
-                        </form>
+                        </div>
+                    </form>
+                </div>
+                <div class="card-footer text-center py-3">
+                    <div class="small">
+                        <a href="{{ url_for('login') }}">Already have an account? Sign in!</a>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-<script>
-document.getElementById('role-select').addEventListener('change', function() {
-    var orgField = document.getElementById('organization-field');
-    if (this.value === 'client') {
-        orgField.style.display = 'block';
-        document.getElementById('organization').required = true;
-    } else {
-        orgField.style.display = 'none';
-        document.getElementById('organization').required = false;
-    }
-});
-
-document.getElementById("registerForm").addEventListener("submit", function(e) {
-    let valid = true;
-    const form = this;
-    const password = form.password;
-    const confirmPassword = form.confirm_password;
-
-    form.querySelectorAll("input[required],select[required]").forEach(function(input) {
-        if (!input.value) { 
-            input.classList.add("is-invalid"); 
-            valid = false; 
-        } else {
-            input.classList.remove("is-invalid");
-        }
-
-        if (input.type === "email" && !input.value.match(input.pattern)) {
-            input.classList.add("is-invalid"); 
-            valid = false;
-        }
-
-        if (input.name === "password" && !input.value.match(input.pattern)) {
-            input.classList.add("is-invalid"); 
-            valid = false;
-        }
-    });
-
-    if (password.value !== confirmPassword.value) {
-        confirmPassword.classList.add("is-invalid");
-        valid = false;
-    } else {
-        confirmPassword.classList.remove("is-invalid");
-    }
-
-    if (!valid) e.preventDefault();
-});
-</script>
 {% endblock %}

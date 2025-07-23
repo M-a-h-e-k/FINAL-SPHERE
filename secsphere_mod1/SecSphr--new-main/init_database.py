@@ -22,78 +22,34 @@ def create_database():
             return False
 
 def create_sample_users():
-    """Create sample users for testing and demonstration"""
-    print("Creating sample users...")
-    
-    users_data = [
-        {
-            'username': 'admin',
-            'email': 'admin@securesphere.com',
-            'password': 'AdminPass123',
-            'role': 'superuser',
-            'organization': 'SecureSphere Inc.',
-            'first_name': 'System',
-            'last_name': 'Administrator'
-        },
-        {
-            'username': 'lead_reviewer',
-            'email': 'lead@securesphere.com',
-            'password': 'LeadPass123',
-            'role': 'lead',
-            'organization': 'SecureSphere Inc.',
-            'first_name': 'John',
-            'last_name': 'Reviewer'
-        },
-        {
-            'username': 'demo_client',
-            'email': 'client@example.com',
-            'password': 'ClientPass123',
-            'role': 'client',
-            'organization': 'Demo Corporation',
-            'first_name': 'Jane',
-            'last_name': 'Client',
-            'phone': '+1-555-0123'
-        },
-        {
-            'username': 'enterprise_client',
-            'email': 'enterprise@company.com',
-            'password': 'EnterprisePass123',
-            'role': 'client',
-            'organization': 'Enterprise Solutions Ltd',
-            'first_name': 'Michael',
-            'last_name': 'Manager',
-            'phone': '+1-555-0456'
-        }
-    ]
+    """Create only essential system user"""
+    print("Creating essential system user...")
     
     with app.app_context():
         try:
-            for user_data in users_data:
-                # Check if user already exists
-                existing_user = User.query.filter_by(username=user_data['username']).first()
-                if not existing_user:
-                    user = User(
-                        username=user_data['username'],
-                        email=user_data['email'],
-                        role=user_data['role'],
-                        organization=user_data['organization'],
-                        first_name=user_data.get('first_name'),
-                        last_name=user_data.get('last_name'),
-                        phone=user_data.get('phone'),
-                        is_active=True
-                    )
-                    user.set_password(user_data['password'])
-                    db.session.add(user)
-                    print(f"✅ Created user: {user_data['username']} ({user_data['role']})")
-                else:
-                    print(f"ℹ️  User already exists: {user_data['username']}")
+            # Only create admin if it doesn't exist
+            existing_admin = User.query.filter_by(username='admin').first()
+            if not existing_admin:
+                admin = User(
+                    username='admin',
+                    email='admin@securesphere.com',
+                    role='superuser',
+                    organization='SecureSphere Inc.',
+                    first_name='System',
+                    last_name='Administrator'
+                )
+                admin.set_password('AdminPass123')
+                db.session.add(admin)
+                print(f"✅ Created admin user for system management")
+            else:
+                print(f"ℹ️  Admin user already exists")
             
             db.session.commit()
-            print("✅ Sample users created successfully")
+            print("✅ Essential user created successfully")
             return True
             
         except Exception as e:
-            print(f"❌ Error creating sample users: {e}")
+            print(f"❌ Error creating admin user: {e}")
             db.session.rollback()
             return False
 
@@ -164,80 +120,9 @@ def create_system_settings():
             return False
 
 def create_sample_products():
-    """Create sample products for demonstration"""
-    print("Creating sample products...")
-    
-    with app.app_context():
-        try:
-            # Get demo client
-            demo_client = User.query.filter_by(username='demo_client').first()
-            enterprise_client = User.query.filter_by(username='enterprise_client').first()
-            
-            if not demo_client or not enterprise_client:
-                print("❌ Sample clients not found. Please create users first.")
-                return False
-            
-            products_data = [
-                {
-                    'name': 'Web Application Security Assessment',
-                    'description': 'Comprehensive security assessment for our customer-facing web application',
-                    'owner_id': demo_client.id
-                },
-                {
-                    'name': 'Mobile Banking App Security Review',
-                    'description': 'Security evaluation of mobile banking application including API security',
-                    'owner_id': demo_client.id
-                },
-                {
-                    'name': 'Enterprise Network Infrastructure Assessment',
-                    'description': 'Complete security audit of enterprise network infrastructure and systems',
-                    'owner_id': enterprise_client.id
-                },
-                {
-                    'name': 'Cloud Security Posture Assessment',
-                    'description': 'Assessment of AWS cloud infrastructure security configuration and compliance',
-                    'owner_id': enterprise_client.id
-                }
-            ]
-            
-            for product_data in products_data:
-                existing_product = Product.query.filter_by(
-                    name=product_data['name'], 
-                    owner_id=product_data['owner_id']
-                ).first()
-                
-                if not existing_product:
-                    product = Product(
-                        name=product_data['name'],
-                        description=product_data['description'],
-                        owner_id=product_data['owner_id']
-                    )
-                    db.session.add(product)
-                    db.session.flush()  # This assigns the ID without committing
-                    
-                    # Create initial product status
-                    status = ProductStatus(
-                        product_id=product.id,
-                        user_id=product_data['owner_id'],
-                        status='in_progress',
-                        questions_completed=0,
-                        total_questions=0,
-                        completion_percentage=0.0
-                    )
-                    db.session.add(status)
-                    
-                    print(f"✅ Created product: {product_data['name']}")
-                else:
-                    print(f"ℹ️  Product already exists: {product_data['name']}")
-            
-            db.session.commit()
-            print("✅ Sample products created successfully")
-            return True
-            
-        except Exception as e:
-            print(f"❌ Error creating sample products: {e}")
-            db.session.rollback()
-            return False
+    """Skip sample products creation - products will be created by users"""
+    print("Skipping sample products creation - products will be created by users")
+    return True
 
 def verify_database():
     """Verify that the database was created correctly"""
@@ -253,7 +138,7 @@ def verify_database():
             expected_tables = [
                 'users', 'products', 'product_statuses', 
                 'questionnaire_responses', 'lead_comments', 
-                'score_history', 'system_settings'
+                'score_history', 'system_settings', 'invitation_tokens'
             ]
             
             for table in expected_tables:
@@ -339,12 +224,10 @@ def main():
     
     print("=" * 60)
     print("🎉 Database initialization completed successfully!")
-    print("\n📋 Default Login Credentials:")
+    print("\n📋 Admin Login Credentials:")
     print("   • Super Admin: admin / AdminPass123")
-    print("   • Lead Reviewer: lead_reviewer / LeadPass123")
-    print("   • Demo Client: demo_client / ClientPass123")
-    print("   • Enterprise Client: enterprise_client / EnterprisePass123")
-    print("\n⚠️  Please change default passwords in production!")
+    print("\n⚠️  Please change admin password in production!")
+    print("💡 Users and products will be created through the admin interface")
     print("=" * 60)
     
     return True
