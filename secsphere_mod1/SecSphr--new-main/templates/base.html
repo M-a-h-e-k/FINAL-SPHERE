@@ -70,6 +70,35 @@
                 padding: 1.5rem;
             }
         }
+        
+        /* Enhanced Header Styling */
+        .dashboard-header {
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            border-radius: 12px;
+            padding: 2rem 1.5rem;
+            margin-bottom: 2rem !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        
+        .dashboard-header h1 {
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            margin-bottom: 1rem !important;
+        }
+        
+        .dashboard-header p {
+            color: #374151 !important;
+            font-weight: 500 !important;
+            font-size: 1.1rem !important;
+        }
+        
+        /* Better button visibility */
+        .btn-primary {
+            box-shadow: 0 2px 4px rgba(30, 64, 175, 0.2);
+        }
+        
+        .btn-success {
+            box-shadow: 0 2px 4px rgba(5, 150, 105, 0.2);
+        }
     </style>
 </head>
 <body class="{% if request.endpoint == 'index' %}landing-page{% else %}dashboard-page{% endif %}">

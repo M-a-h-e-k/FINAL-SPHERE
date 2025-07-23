@@ -227,9 +227,22 @@ class InvitationToken(db.Model):
         now = datetime.now(timezone.utc)
         expires_at = self.expires_at
         
+        # Handle timezone conversion more robustly
+        if expires_at is None:
+            return True  # If no expiration date, consider it expired
+            
         # If expires_at is naive, make it timezone-aware (assume UTC)
-        if expires_at.tzinfo is None:
+        if expires_at.tzinfo is None or expires_at.tzinfo.utcoffset(expires_at) is None:
             expires_at = expires_at.replace(tzinfo=timezone.utc)
+        
+        # Convert both to UTC for comparison
+        if now.tzinfo is None:
+            now = now.replace(tzinfo=timezone.utc)
+        else:
+            now = now.astimezone(timezone.utc)
+            
+        if expires_at.tzinfo != timezone.utc:
+            expires_at = expires_at.astimezone(timezone.utc)
         
         return now > expires_at
     
@@ -373,6 +386,12 @@ def init_database():
         except Exception as e:
             print(f"❌ Error initializing database: {e}")
             
+        # Fix any existing naive datetime entries
+        try:
+            fix_naive_datetimes()
+        except Exception as e:
+            print(f"⚠️ Warning: Could not fix naive datetimes: {e}")
+            
         # Ensure default admin user exists
         admin_user = User.query.filter_by(username='admin').first()
         if not admin_user:
@@ -389,6 +408,44 @@ def init_database():
             db.session.add(admin)
             db.session.commit()
             print("✅ Default admin user created")
+
+def fix_naive_datetimes():
+    """Fix any naive datetime entries in the database"""
+    print("🔧 Checking for naive datetime entries...")
+    
+    # Fix InvitationToken entries
+    invitations = InvitationToken.query.all()
+    fixed_count = 0
+    
+    for invitation in invitations:
+        needs_update = False
+        
+        # Fix expires_at if it's naive
+        if invitation.expires_at and (invitation.expires_at.tzinfo is None or 
+                                    invitation.expires_at.tzinfo.utcoffset(invitation.expires_at) is None):
+            invitation.expires_at = invitation.expires_at.replace(tzinfo=timezone.utc)
+            needs_update = True
+            
+        # Fix created_at if it's naive
+        if invitation.created_at and (invitation.created_at.tzinfo is None or 
+                                    invitation.created_at.tzinfo.utcoffset(invitation.created_at) is None):
+            invitation.created_at = invitation.created_at.replace(tzinfo=timezone.utc)
+            needs_update = True
+            
+        # Fix used_at if it's naive
+        if invitation.used_at and (invitation.used_at.tzinfo is None or 
+                                 invitation.used_at.tzinfo.utcoffset(invitation.used_at) is None):
+            invitation.used_at = invitation.used_at.replace(tzinfo=timezone.utc)
+            needs_update = True
+            
+        if needs_update:
+            fixed_count += 1
+    
+    if fixed_count > 0:
+        db.session.commit()
+        print(f"✅ Fixed {fixed_count} naive datetime entries")
+    else:
+        print("✅ No naive datetime entries found")
 
 def calculate_score_for_answer(question, answer):
     """Calculate score for a specific question-answer pair based on CSV data"""
@@ -574,9 +631,29 @@ def register():
     
     if token:
         invitation = InvitationToken.query.filter_by(token=token, is_used=False).first()
-        if not invitation or invitation.is_expired():
-            flash('Invalid or expired invitation link.')
+        if not invitation:
+            flash('Invalid invitation link.')
             return redirect(url_for('login'))
+        
+        # Check if invitation is expired with error handling
+        try:
+            if invitation.is_expired():
+                flash('Expired invitation link.')
+                return redirect(url_for('login'))
+        except Exception as e:
+            print(f"Error checking invitation expiration: {e}")
+            # If there's an error checking expiration, try to fix the datetime and check again
+            try:
+                if invitation.expires_at and invitation.expires_at.tzinfo is None:
+                    invitation.expires_at = invitation.expires_at.replace(tzinfo=timezone.utc)
+                    db.session.commit()
+                if invitation.is_expired():
+                    flash('Expired invitation link.')
+                    return redirect(url_for('login'))
+            except Exception as e2:
+                print(f"Could not fix invitation datetime: {e2}")
+                flash('There was an issue with your invitation link. Please request a new one.')
+                return redirect(url_for('login'))
     else:
         flash('Registration requires a valid invitation.')
         return redirect(url_for('login'))
@@ -1422,9 +1499,15 @@ def invite_user():
         
         # Check if there's already a pending invitation
         existing_invitation = InvitationToken.query.filter_by(email=email, is_used=False).first()
-        if existing_invitation and not existing_invitation.is_expired():
-            flash('There is already a pending invitation for this email.')
-            return redirect(url_for('invite_user'))
+        if existing_invitation:
+            try:
+                if not existing_invitation.is_expired():
+                    flash('There is already a pending invitation for this email.')
+                    return redirect(url_for('invite_user'))
+            except Exception as e:
+                print(f"Error checking existing invitation expiration: {e}")
+                # If there's an error, assume it's expired and continue with new invitation
+                pass
         
         # Generate invitation token
         token = secrets.token_urlsafe(32)
