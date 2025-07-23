@@ -926,6 +926,7 @@ def add_product():
         cicd_platform = request.form['cicd_platform']
         additional_details = request.form.get('additional_details', '')
 
+
         if not name or not product_url or not programming_language or not cloud_platform or not cicd_platform:
             flash('Please fill in all required fields.')
             return redirect(url_for('add_product'))
@@ -936,6 +937,7 @@ def add_product():
 
         product = Product(
             name=name,
+
             product_url=product_url,
             programming_language=programming_language,
             cloud_platform=cloud_platform,

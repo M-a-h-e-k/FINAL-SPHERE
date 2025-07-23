@@ -244,9 +244,11 @@
                                     </td>
                                      <td>
                                          <div class="d-flex flex-column gap-1">
+
                                              {% if response.client_comment %}
                                                  <small class="text-muted" title="{{ response.client_comment }}">
                                                      <i class="bi bi-chat-dots me-1"></i>{{ response.client_comment[:25] }}{% if response.client_comment|length > 25 %}...{% endif %}
+
                                                  </small>
                                              {% endif %}
                                              {% if response.evidence_path %}
