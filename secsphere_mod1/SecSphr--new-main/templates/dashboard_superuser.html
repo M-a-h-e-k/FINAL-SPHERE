@@ -204,60 +204,55 @@
                 <div id="responsesView">
                     {% if all_responses %}
                     <div class="table-responsive">
-                        <table class="table table-hover">
+                        <table class="table table-hover table-sm">
                             <thead class="table-light">
                                 <tr>
-                                                                         <th>ID</th>
-                                     <th>Client</th>
-                                     <th>Product</th>
-                                     <th>Section</th>
-                                     <th>Question</th>
-                                     <th>Answer</th>
-                                     <th>Comment/Evidence</th>
-                                     <th>Status</th>
-                                     <th>Date</th>
+                                    <th width="5%">ID</th>
+                                    <th width="15%">Client</th>
+                                    <th width="12%">Product</th>
+                                    <th width="15%">Section</th>
+                                    <th width="25%">Question</th>
+                                    <th width="10%">Answer</th>
+                                    <th width="15%">Comment/Evidence</th>
+                                    <th width="8%">Status</th>
+                                    <th width="8%">Date</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {% for response, user, product in all_responses %}
                                 <tr>
-                                    <td>{{ response.id }}</td>
+                                    <td><span class="text-muted">#{{ response.id }}</span></td>
                                     <td>
-                                        <div class="d-flex align-items-center">
-                                            <i class="bi bi-person-circle me-2"></i>
-                                            {{ user.username }}
-                                            <small class="text-muted ms-1">({{ user.organization or 'N/A' }})</small>
+                                        <div>
+                                            <strong>{{ user.username }}</strong>
+                                            {% if user.organization %}
+                                            <br><small class="text-muted">{{ user.organization }}</small>
+                                            {% endif %}
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="badge bg-primary">{{ product.name }}</span>
+                                        <span class="badge bg-info">{{ product.name[:15] }}{% if product.name|length > 15 %}...{% endif %}</span>
                                     </td>
-                                    <td>{{ response.section[:20] }}...</td>
+                                    <td><small>{{ response.section[:18] }}{% if response.section|length > 18 %}...{% endif %}</small></td>
                                     <td>
-                                        <div class="question-text-wrap">
-                                            {{ response.question[:50] }}{% if response.question|length > 50 %}...{% endif %}
-                                            <button class="btn btn-link btn-sm p-0" onclick="showFullQuestion('{{ response.question|e }}')" title="View full question">
-                                                <i class="bi bi-arrows-expand"></i>
-                                            </button>
+                                        <div title="{{ response.question }}">
+                                            <small>{{ response.question[:45] }}{% if response.question|length > 45 %}...{% endif %}</small>
                                         </div>
                                     </td>
-                                                                         <td>
-                                         <span class="badge bg-success">{{ response.answer[:15] }}{% if response.answer|length > 15 %}...{% endif %}</span>
-                                     </td>
+                                    <td>
+                                        <span class="badge bg-success">{{ response.answer[:12] }}{% if response.answer|length > 12 %}...{% endif %}</span>
+                                    </td>
                                      <td>
-                                         <div class="comment-evidence-cell">
+                                         <div class="d-flex flex-column gap-1">
                                              {% if response.comment %}
-                                                 <div class="comment-text">
-                                                     <i class="bi bi-chat-dots text-primary me-1"></i>
-                                                     <small>{{ response.comment[:30] }}{% if response.comment|length > 30 %}...{% endif %}</small>
-                                                 </div>
+                                                 <small class="text-muted" title="{{ response.comment }}">
+                                                     <i class="bi bi-chat-dots me-1"></i>{{ response.comment[:25] }}{% if response.comment|length > 25 %}...{% endif %}
+                                                 </small>
                                              {% endif %}
                                              {% if response.evidence_path %}
-                                                 <div class="evidence-link mt-1">
-                                                     <a href="/{{ response.evidence_path }}" target="_blank" class="btn btn-outline-info btn-sm" title="View Evidence">
-                                                         <i class="bi bi-paperclip me-1"></i>Evidence
-                                                     </a>
-                                                 </div>
+                                                 <a href="/{{ response.evidence_path }}" target="_blank" class="btn btn-outline-info btn-xs" title="View Evidence">
+                                                     <i class="bi bi-paperclip"></i>
+                                                 </a>
                                              {% endif %}
                                              {% if not response.comment and not response.evidence_path %}
                                                  <span class="text-muted">-</span>
@@ -268,16 +263,16 @@
                                          {% set lead_comment = response.lead_comments|first %}
                                          {% if lead_comment %}
                                              {% if lead_comment.status == 'approved' %}
-                                                 <span class="badge bg-success">Approved</span>
+                                                 <span class="badge bg-success">✓</span>
                                              {% elif lead_comment.status == 'needs_revision' %}
-                                                 <span class="badge bg-warning">Needs Revision</span>
+                                                 <span class="badge bg-warning">!</span>
                                              {% elif lead_comment.status == 'rejected' %}
-                                                 <span class="badge bg-danger">Rejected</span>
+                                                 <span class="badge bg-danger">✗</span>
                                              {% else %}
-                                                 <span class="badge bg-secondary">Pending</span>
+                                                 <span class="badge bg-secondary">⏳</span>
                                              {% endif %}
                                          {% else %}
-                                             <span class="badge bg-secondary">Pending</span>
+                                             <span class="badge bg-secondary">⏳</span>
                                          {% endif %}
                                      </td>
                                     <td>

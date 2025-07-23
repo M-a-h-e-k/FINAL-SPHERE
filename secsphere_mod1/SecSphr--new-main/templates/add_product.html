@@ -25,10 +25,101 @@
                     </div>
                     
                     <div class="form-floating mb-4">
-                        <textarea class="form-control" name="description" id="productDescription" 
-                                  placeholder="Product Description" rows="3" style="height: 100px;"></textarea>
-                        <label for="productDescription">
-                            <i class="bi bi-file-text me-2"></i>Description (Optional)
+                        <input type="url" name="product_url" class="form-control" id="productUrl" 
+                               placeholder="Product URL" required>
+                        <label for="productUrl">
+                            <i class="bi bi-link-45deg me-2"></i>Product URL *
+                        </label>
+                        <div class="invalid-feedback">Please enter a valid product URL.</div>
+                    </div>
+                    
+                    <div class="form-floating mb-4">
+                        <select name="programming_language" class="form-select" id="programmingLanguage" required>
+                            <option value="">Select Programming Language</option>
+                            <option value="Java">Java</option>
+                            <option value="Python">Python</option>
+                            <option value="JavaScript">JavaScript</option>
+                            <option value="TypeScript">TypeScript</option>
+                            <option value="C#">C#</option>
+                            <option value="C++">C++</option>
+                            <option value="PHP">PHP</option>
+                            <option value="Ruby">Ruby</option>
+                            <option value="Go">Go</option>
+                            <option value="Rust">Rust</option>
+                            <option value="Swift">Swift</option>
+                            <option value="Kotlin">Kotlin</option>
+                            <option value="Scala">Scala</option>
+                            <option value="R">R</option>
+                            <option value="MATLAB">MATLAB</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <label for="programmingLanguage">
+                            <i class="bi bi-code-slash me-2"></i>Programming Language *
+                        </label>
+                        <div class="invalid-feedback">Please select a programming language.</div>
+                    </div>
+                    
+                    <div class="form-floating mb-4">
+                        <select name="cloud_platform" class="form-select" id="cloudPlatform" required>
+                            <option value="">Select Cloud Platform</option>
+                            <option value="AWS">Amazon Web Services (AWS)</option>
+                            <option value="Azure">Microsoft Azure</option>
+                            <option value="GCP">Google Cloud Platform (GCP)</option>
+                            <option value="Oracle Cloud">Oracle Cloud</option>
+                            <option value="IBM Cloud">IBM Cloud</option>
+                            <option value="Alibaba Cloud">Alibaba Cloud</option>
+                            <option value="DigitalOcean">DigitalOcean</option>
+                            <option value="Linode">Linode</option>
+                            <option value="Vultr">Vultr</option>
+                            <option value="Heroku">Heroku</option>
+                            <option value="Vercel">Vercel</option>
+                            <option value="Netlify">Netlify</option>
+                            <option value="On-Premises">On-Premises</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <label for="cloudPlatform">
+                            <i class="bi bi-cloud me-2"></i>Cloud Platform *
+                        </label>
+                        <div class="invalid-feedback">Please select a cloud platform.</div>
+                    </div>
+                    
+                    <div class="form-floating mb-4" id="cloudPlatformOtherDiv" style="display: none;">
+                        <input type="text" name="cloud_platform_other" class="form-control" id="cloudPlatformOther" 
+                               placeholder="Specify other cloud platform">
+                        <label for="cloudPlatformOther">
+                            <i class="bi bi-cloud me-2"></i>Specify Cloud Platform
+                        </label>
+                    </div>
+                    
+                    <div class="form-floating mb-4">
+                        <select name="cicd_platform" class="form-select" id="cicdPlatform" required>
+                            <option value="">Select CI/CD Platform</option>
+                            <option value="Jenkins">Jenkins</option>
+                            <option value="GitHub Actions">GitHub Actions</option>
+                            <option value="GitLab CI/CD">GitLab CI/CD</option>
+                            <option value="Azure DevOps">Azure DevOps</option>
+                            <option value="CircleCI">CircleCI</option>
+                            <option value="Travis CI">Travis CI</option>
+                            <option value="Bamboo">Bamboo</option>
+                            <option value="TeamCity">TeamCity</option>
+                            <option value="Buildkite">Buildkite</option>
+                            <option value="AWS CodePipeline">AWS CodePipeline</option>
+                            <option value="Google Cloud Build">Google Cloud Build</option>
+                            <option value="Bitbucket Pipelines">Bitbucket Pipelines</option>
+                            <option value="None">None</option>
+                            <option value="Other">Other</option>
+                        </select>
+                        <label for="cicdPlatform">
+                            <i class="bi bi-gear me-2"></i>CI/CD Platform *
+                        </label>
+                        <div class="invalid-feedback">Please select a CI/CD platform.</div>
+                    </div>
+                    
+                    <div class="form-floating mb-4">
+                        <textarea class="form-control" name="additional_details" id="additionalDetails" 
+                                  placeholder="Additional Details" rows="3" style="height: 100px;"></textarea>
+                        <label for="additionalDetails">
+                            <i class="bi bi-file-text me-2"></i>Additional Details (Optional)
                         </label>
                     </div>
                     
@@ -70,6 +161,21 @@ document.getElementById('addProductForm').addEventListener('submit', function(e)
 document.getElementById('productName').addEventListener('input', function() {
     if (this.value.trim()) {
         this.classList.remove('is-invalid');
+    }
+});
+
+// Show/hide cloud platform other field
+document.getElementById('cloudPlatform').addEventListener('change', function() {
+    const otherDiv = document.getElementById('cloudPlatformOtherDiv');
+    const otherInput = document.getElementById('cloudPlatformOther');
+    
+    if (this.value === 'Other') {
+        otherDiv.style.display = 'block';
+        otherInput.required = true;
+    } else {
+        otherDiv.style.display = 'none';
+        otherInput.required = false;
+        otherInput.value = '';
     }
 });
 </script>
